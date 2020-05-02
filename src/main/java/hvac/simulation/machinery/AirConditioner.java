@@ -6,6 +6,12 @@ public class AirConditioner {
     private float exchangedAirVolumePerSecond;//in m^3/s
     private float waterRemoved;//as number from 0 to 1 (1 - all water removed)
 
+    public AirConditioner(float coolingPower, float exchangedAirVolumePerSecond, float waterRemoved) {
+        this.coolingPower = coolingPower;
+        this.exchangedAirVolumePerSecond = exchangedAirVolumePerSecond;
+        this.waterRemoved = waterRemoved;
+    }
+
     public float getCoolingPower() {
         return coolingPower;
     }
@@ -27,12 +33,6 @@ public class AirConditioner {
     }
 
     public void setWaterRemoved(float waterRemoved) {
-        this.waterRemoved = waterRemoved;
-    }
-
-    public AirConditioner(float coolingPower, float exchangedAirVolumePerSecond, float waterRemoved) {
-        this.coolingPower = coolingPower;
-        this.exchangedAirVolumePerSecond = exchangedAirVolumePerSecond;
         this.waterRemoved = waterRemoved;
     }
 }

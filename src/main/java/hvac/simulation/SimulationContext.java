@@ -8,6 +8,7 @@ public class SimulationContext {
     private RoomMap roomMap = new RoomMap();
     private Hashtable<Room, RoomClimate> climates = new Hashtable<>();
     private OutsideClimate outsideClimate = new OutsideClimate();
+
     public RoomMap getRoomMap() {
         return roomMap;
     }

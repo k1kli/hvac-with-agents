@@ -13,6 +13,7 @@ import java.util.Hashtable;
 public class ClimateUpdatingBehaviour extends TickerBehaviour {
     private SimulationContext context;
     private float timeScale;
+
     public ClimateUpdatingBehaviour(Agent agent,
                                     int updateTickTime,
                                     SimulationContext context, float timeScale) {

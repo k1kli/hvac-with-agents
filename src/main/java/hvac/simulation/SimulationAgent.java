@@ -36,7 +36,6 @@ public class SimulationAgent extends Agent {
         });
     }
 
-
     private void loadMap() {
         Room r1 = new Room(200, 50);
         Room r2 = new Room(250, 70);

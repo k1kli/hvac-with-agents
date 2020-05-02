@@ -5,6 +5,15 @@ import hvac.simulation.machinery.Heater;
 import hvac.simulation.machinery.Ventilator;
 
 public class RoomClimate {
+    private float temperature;//in kelvins
+    private Heater heater;
+    private AirConditioner airConditioner;
+    private Ventilator ventilator;
+    private float absoluteHumidity;//in kg/m^3
+    private float relativeHumidity;//ratio (no unit)
+    private int peopleInRoom = 0;
+    private float airQuality;
+
     public RoomClimate(Heater heater, AirConditioner airConditioner, Ventilator ventilator) {
         this.heater = heater;
         this.airConditioner = airConditioner;
@@ -62,14 +71,4 @@ public class RoomClimate {
     public void setAirQuality(float airQuality) {
         this.airQuality = airQuality;
     }
-
-    private float temperature;//in kelvins
-    private Heater heater;
-    private AirConditioner airConditioner;
-    private Ventilator ventilator;
-    private float absoluteHumidity;//in kg/m^3
-    private float relativeHumidity;//ratio (no unit)
-    private int peopleInRoom = 0;
-    private float airQuality;
-
 }

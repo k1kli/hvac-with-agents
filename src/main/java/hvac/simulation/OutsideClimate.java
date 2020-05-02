@@ -1,6 +1,10 @@
 package hvac.simulation;
 
 public class OutsideClimate {
+    private float pressure;
+    private float temperature;
+    private float absoluteHumidity;
+
     public float getPressure() {
         return pressure;
     }
@@ -24,8 +28,4 @@ public class OutsideClimate {
     public void setAbsoluteHumidity(float absoluteHumidity) {
         this.absoluteHumidity = absoluteHumidity;
     }
-
-    private float pressure;
-    private float temperature;
-    private float absoluteHumidity;
 }

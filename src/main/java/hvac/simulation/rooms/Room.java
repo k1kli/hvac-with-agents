@@ -1,8 +1,8 @@
 package hvac.simulation.rooms;
 
 public class Room {
-    private float volume;//in m3
-    private float area;//in m2
+    private final float volume;//in m3
+    private final float area;//in m2
     public Room(float volume, float area)
     {
         this.volume = volume;

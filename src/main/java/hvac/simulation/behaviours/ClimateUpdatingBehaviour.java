@@ -1,10 +1,9 @@
 package hvac.simulation.behaviours;
 
-import com.sun.tools.javac.util.Pair;
 import hvac.simulation.SimulationContext;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomClimate;
-import hvac.simulation.rooms.RoomWall;
+import hvac.simulation.rooms.RoomLink;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
 
@@ -77,11 +76,11 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
     private float calculateBetweenRoomsHeatTransferFor(Room r, RoomClimate oldClimate) {
         float res = 0;
         float myTemperature = oldClimate.getTemperature();
-        for(Pair<RoomWall, Room> neighborLink : context.getRoomMap().getNeighbors(r)) {
-            float neighborTemperature = context.getClimates().get(neighborLink.snd).getTemperature();
+        for(RoomLink neighborLink : context.getRoomMap().getNeighbors(r)) {
+            float neighborTemperature = context.getClimates().get(neighborLink.getNeighbor()).getTemperature();
             float deltaT = neighborTemperature - myTemperature;
-            float QPerSecondNeighbor = neighborLink.fst.getArea()
-                    *neighborLink.fst.getHeatTransferCoefficient()
+            float QPerSecondNeighbor = neighborLink.getWall().getArea()
+                    *neighborLink.getWall().getHeatTransferCoefficient()
                     *deltaT;
             res += QPerSecondNeighbor;
         }

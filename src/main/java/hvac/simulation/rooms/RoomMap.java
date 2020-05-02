@@ -1,11 +1,10 @@
 package hvac.simulation.rooms;
 
-import com.sun.tools.javac.util.Pair;
 import java.util.Hashtable;
 import java.util.LinkedList;
 
 public class RoomMap {
-    private Hashtable<Room, LinkedList<Pair<RoomWall, Room>>> roomGraph
+    private Hashtable<Room, LinkedList<RoomLink>> roomGraph
             = new Hashtable<>();
 
     public void addRoom(Room room) {
@@ -19,15 +18,15 @@ public class RoomMap {
             throw new RuntimeException("Room r1 is not present on map");
         if(!roomGraph.containsKey(r2))
             throw new RuntimeException("Room r2 is not present on map");
-        for(Pair<RoomWall, Room> roomLink : roomGraph.get(r1)) {
-            if(roomLink.snd.equals(r2))
+        for(RoomLink roomLink : roomGraph.get(r1)) {
+            if(roomLink.getNeighbor().equals(r2))
                 throw new RuntimeException("Rooms already linked");
         }
-        roomGraph.get(r1).add(new Pair<>(wall, r2));
-        roomGraph.get(r2).add(new Pair<>(wall, r1));
+        roomGraph.get(r1).add(new RoomLink(r2, wall));
+        roomGraph.get(r2).add(new RoomLink(r1, wall));
     }
 
-    public Iterable<Pair<RoomWall, Room>> getNeighbors(Room r) {
+    public Iterable<RoomLink> getNeighbors(Room r) {
         if(!roomGraph.containsKey(r))
             throw new RuntimeException("Room r is not present on map");
         return roomGraph.get(r);

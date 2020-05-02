@@ -33,13 +33,15 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
             newClimate.setPeopleInRoom(oldClimate.getPeopleInRoom());
             newClimate.setTemperature(calculateTemperatureFor(r, oldClimate));
             newClimate.setAbsoluteHumidity(calculateAbsoluteHumidityFor(r, oldClimate));
-            newClimate.setRelativeHumidity(calculateRelativeHumidityFor(r, newClimate));
+            newClimate.setRelativeHumidity(calculateRelativeHumidityFor(newClimate));
+            newClimate.setAirQuality(calculateAirQualityFor(r, oldClimate));
             newClimates.put(r, newClimate);
         }
         for(Room r : context.getRoomMap().getRooms()) {
             context.getClimates().put(r, newClimates.get(r));
         }
     }
+
 
     private float getDeltaTime() { return getPeriod() * 0.001f * timeScale; }
 
@@ -115,7 +117,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
                 / r.getVolume();
     }
 
-    private float calculateRelativeHumidityFor(Room r, RoomClimate newClimate) {
+    private float calculateRelativeHumidityFor(RoomClimate newClimate) {
         float outsidePressure = context.getOutsideClimate().getPressure();
         float tempCelsius = newClimate.getTemperature() - 273;
         float outsidePressureHectoPascals = outsidePressure*0.01f;
@@ -126,6 +128,15 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
                 * Math.exp(17.62*tempCelsius/(243.12+tempCelsius)));
         float currentWaterVapour = newClimate.getAbsoluteHumidity() * 461.5f * newClimate.getTemperature();
         return currentWaterVapour/saturationWaterVapour * 0.01f;
+    }
+
+    private float calculateAirQualityFor(Room r, RoomClimate oldClimate) {
+        int peopleInRoom = oldClimate.getPeopleInRoom();
+        float roomArea = r.getArea();
+        float optimalVentilation = 2.5f * peopleInRoom + 0.3f * roomArea;
+        optimalVentilation /= 1000f; //conversion to m^3/s from L/s
+        float actualVentilation = oldClimate.getVentilator().getExchangedAirVolumePerSecond();
+        return Math.min(1f, actualVentilation / optimalVentilation);
     }
 
 }

@@ -10,6 +10,7 @@ import hvac.simulation.rooms.RoomWall;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
 
+@SuppressWarnings("unused")
 public class SimulationAgent extends Agent {
     SimulationContext simulationContext = new SimulationContext();
 
@@ -19,14 +20,18 @@ public class SimulationAgent extends Agent {
         setDefaultClimate();
         addBehaviour(new ClimateUpdatingBehaviour(
                 this, 1000, simulationContext, 10f));
+        Room r = simulationContext.getRoomMap().getRooms().iterator().next();
         addBehaviour(new TickerBehaviour(this, 1010) {
             @Override
             protected void onTick() {
-                int i = 0;
-                for (Room r : simulationContext.getRoomMap().getRooms()) {
-                    System.out.println("Humidity in room " + (i++) + " is "
-                            + simulationContext.getClimates().get(r).getRelativeHumidity());
-                }
+                    System.out.println("Room 1 currently has:");
+                    RoomClimate climate = simulationContext.getClimates().get(r);
+                    float temp = climate.getTemperature() - 273f;
+                    float rh = climate.getRelativeHumidity()*100f;
+                    float airQuality = climate.getAirQuality()*100f;
+                    System.out.println("Temperature " + temp + " degrees C");
+                    System.out.println("Relative humidity " + rh + "%");
+                    System.out.println("Air quality " + airQuality + "%");
             }
         });
     }
@@ -60,7 +65,7 @@ public class SimulationAgent extends Agent {
                     new Ventilator(0.02f));//20L/s == 0.02m^3/s
             climate.setAbsoluteHumidity(0.001f);
             climate.setPeopleInRoom(0);
-            if(i++ == 0) climate.setTemperature(273f+40f);
+            if(i++ == 0) climate.setTemperature(273f+15f);
             else climate.setTemperature(273f+20f);
             simulationContext.getClimates().put(r, climate);
         }

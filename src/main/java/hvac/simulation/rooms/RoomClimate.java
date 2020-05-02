@@ -55,6 +55,14 @@ public class RoomClimate {
         return peopleInRoom;
     }
 
+    public float getAirQuality() {
+        return airQuality;
+    }
+
+    public void setAirQuality(float airQuality) {
+        this.airQuality = airQuality;
+    }
+
     private float temperature;//in kelvins
     private Heater heater;
     private AirConditioner airConditioner;
@@ -62,4 +70,6 @@ public class RoomClimate {
     private float absoluteHumidity;//in kg/m^3
     private float relativeHumidity;//ratio (no unit)
     private int peopleInRoom = 0;
+    private float airQuality;
+
 }

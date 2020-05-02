@@ -1,6 +1,9 @@
 package hvac.simulation;
 
 import hvac.simulation.behaviours.ClimateUpdatingBehaviour;
+import hvac.simulation.machinery.AirConditioner;
+import hvac.simulation.machinery.Heater;
+import hvac.simulation.machinery.Ventilator;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomClimate;
 import hvac.simulation.rooms.RoomWall;
@@ -21,8 +24,8 @@ public class SimulationAgent extends Agent {
             protected void onTick() {
                 int i = 0;
                 for (Room r : simulationContext.getRoomMap().getRooms()) {
-                    System.out.println("Temperature in room " + (i++) + " is "
-                            + simulationContext.getClimates().get(r).getTemperature());
+                    System.out.println("Humidity in room " + (i++) + " is "
+                            + simulationContext.getClimates().get(r).getRelativeHumidity());
                 }
             }
         });
@@ -51,14 +54,14 @@ public class SimulationAgent extends Agent {
     private void setDefaultClimate() {
         int i = 0;
         for(Room r : simulationContext.getRoomMap().getRooms()) {
-            RoomClimate climate = new RoomClimate();
+            RoomClimate climate = new RoomClimate(
+                    new Heater(0f),
+                    new AirConditioner(0f, 0f, 0.5f),
+                    new Ventilator(0.02f));//20L/s == 0.02m^3/s
             climate.setAbsoluteHumidity(0.001f);
-            climate.setAcPower(0f);
-            climate.setHeaterPower(0f);
             climate.setPeopleInRoom(0);
             if(i++ == 0) climate.setTemperature(273f+40f);
             else climate.setTemperature(273f+20f);
-            climate.setVentilation(0.02f);//20L/s == 0.02m^3/s
             simulationContext.getClimates().put(r, climate);
         }
         simulationContext.getOutsideClimate().setAbsoluteHumidity(0.002f);

@@ -24,13 +24,16 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
     protected void onTick() {
         Hashtable<Room, RoomClimate> newClimates = new Hashtable<>();
         for(Room r : context.getRoomMap().getRooms()) {
-            RoomClimate newClimate = new RoomClimate();
             RoomClimate oldClimate = context.getClimates().get(r);
-            newClimate.setVentilation(oldClimate.getVentilation());
+            RoomClimate newClimate = new RoomClimate(
+                    oldClimate.getHeater(),
+                    oldClimate.getAirConditioner(),
+                    oldClimate.getVentilator());
+
             newClimate.setPeopleInRoom(oldClimate.getPeopleInRoom());
-            newClimate.setHeaterPower(oldClimate.getHeaterPower());
-            newClimate.setAcPower(oldClimate.getAcPower());
             newClimate.setTemperature(calculateTemperatureFor(r, oldClimate));
+            newClimate.setAbsoluteHumidity(calculateAbsoluteHumidityFor(r, oldClimate));
+            newClimate.setRelativeHumidity(calculateRelativeHumidityFor(r, newClimate));
             newClimates.put(r, newClimate);
         }
         for(Room r : context.getRoomMap().getRooms()) {
@@ -63,7 +66,9 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
     }
 
     private float calculateHeatingACHeatTransferFor(RoomClimate oldClimate) {
-        return (oldClimate.getHeaterPower() - oldClimate.getAcPower())*getDeltaTime();
+        float heatingPower = oldClimate.getHeater().getHeatingPower();
+        float coolingPower = oldClimate.getAirConditioner().getCoolingPower();
+        return (heatingPower - coolingPower)*getDeltaTime();
     }
 
     private float calculateBetweenRoomsHeatTransferFor(Room r, RoomClimate oldClimate) {
@@ -81,10 +86,46 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
     }
 
     private float calculateTemperatureWithVentilationFor(Room r, RoomClimate oldClimate, float beforeVentilationTemp) {
-        float ventilationAirVolume = Math.min(oldClimate.getVentilation()*getDeltaTime(), r.getVolume());
+        float airExchangedPerSecond = oldClimate.getVentilator().getExchangedAirVolumePerSecond();
+        float airExchanged = Math.min(airExchangedPerSecond*getDeltaTime(), r.getVolume());
         float outsideTemperature = context.getOutsideClimate().getTemperature();
-        return (beforeVentilationTemp * (r.getVolume() - ventilationAirVolume)
-                + outsideTemperature * ventilationAirVolume) / r.getVolume();
+        return (beforeVentilationTemp * (r.getVolume() - airExchanged)
+                + outsideTemperature * airExchanged) / r.getVolume();
+    }
+
+    private float calculateAbsoluteHumidityFor(Room r, RoomClimate oldClimate) {
+        float withAC = calculateHumidityWithACFor(r, oldClimate);
+        return calculateHumidityWithVentilationFor(r, oldClimate, withAC);
+    }
+
+
+    private float calculateHumidityWithACFor(Room r, RoomClimate oldClimate) {
+        float airExchangedPerSecond = oldClimate.getAirConditioner().getExchangedAirVolumePerSecond();
+        float waterRemoved = oldClimate.getAirConditioner().getWaterRemoved();
+        float airExchanged = Math.min(airExchangedPerSecond*getDeltaTime(), r.getVolume());
+        float oldHumidity = oldClimate.getAbsoluteHumidity();
+        return oldHumidity * (r.getVolume() - waterRemoved * airExchanged) / r.getVolume();
+    }
+
+    private float calculateHumidityWithVentilationFor(Room r, RoomClimate oldClimate, float humidityWithAC) {
+        float airExchangedPerSecond = oldClimate.getVentilator().getExchangedAirVolumePerSecond();
+        float outsideHumidity = context.getOutsideClimate().getAbsoluteHumidity();
+        float airExchanged = Math.min(airExchangedPerSecond*getDeltaTime(), r.getVolume());
+        return (humidityWithAC * (r.getVolume() - airExchanged) + outsideHumidity * airExchanged)
+                / r.getVolume();
+    }
+
+    private float calculateRelativeHumidityFor(Room r, RoomClimate newClimate) {
+        float outsidePressure = context.getOutsideClimate().getPressure();
+        float tempCelsius = newClimate.getTemperature() - 273;
+        float outsidePressureHectoPascals = outsidePressure*0.01f;
+        double pressureFunctionValue = 1.0016
+                + 0.00000315 * outsidePressureHectoPascals
+                - 0.074 / outsidePressureHectoPascals;
+        float saturationWaterVapour = (float)(pressureFunctionValue * 6.112
+                * Math.exp(17.62*tempCelsius/(243.12+tempCelsius)));
+        float currentWaterVapour = newClimate.getAbsoluteHumidity() * 461.5f * newClimate.getTemperature();
+        return currentWaterVapour/saturationWaterVapour * 0.01f;
     }
 
 }

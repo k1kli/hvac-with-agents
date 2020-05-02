@@ -1,20 +1,18 @@
 package hvac.simulation.rooms;
 
+import hvac.simulation.machinery.AirConditioner;
+import hvac.simulation.machinery.Heater;
+import hvac.simulation.machinery.Ventilator;
+
 public class RoomClimate {
+    public RoomClimate(Heater heater, AirConditioner airConditioner, Ventilator ventilator) {
+        this.heater = heater;
+        this.airConditioner = airConditioner;
+        this.ventilator = ventilator;
+    }
+
     public float getTemperature() {
         return temperature;
-    }
-
-    public float getHeaterPower() {
-        return heaterPower;
-    }
-
-    public float getAcPower() {
-        return acPower;
-    }
-
-    public float getVentilation() {
-        return ventilation;
     }
 
     public float getAbsoluteHumidity() {
@@ -29,18 +27,6 @@ public class RoomClimate {
         this.temperature = temperature;
     }
 
-    public void setHeaterPower(float heaterPower) {
-        this.heaterPower = heaterPower;
-    }
-
-    public void setAcPower(float acPower) {
-        this.acPower = acPower;
-    }
-
-    public void setVentilation(float ventilation) {
-        this.ventilation = ventilation;
-    }
-
     public void setAbsoluteHumidity(float absoluteHumidity) {
         this.absoluteHumidity = absoluteHumidity;
     }
@@ -53,14 +39,26 @@ public class RoomClimate {
         this.peopleInRoom = peopleInRoom;
     }
 
+    public Heater getHeater() {
+        return heater;
+    }
+
+    public AirConditioner getAirConditioner() {
+        return airConditioner;
+    }
+
+    public Ventilator getVentilator() {
+        return ventilator;
+    }
+
     public int getPeopleInRoom() {
         return peopleInRoom;
     }
 
     private float temperature;//in kelvins
-    private float heaterPower;//in watts
-    private float acPower;//in watts
-    private float ventilation;// in m3 per second
+    private Heater heater;
+    private AirConditioner airConditioner;
+    private Ventilator ventilator;
     private float absoluteHumidity;//in kg/m^3
     private float relativeHumidity;//ratio (no unit)
     private int peopleInRoom = 0;

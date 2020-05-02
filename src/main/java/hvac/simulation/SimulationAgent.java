@@ -1,9 +1,11 @@
 package hvac.simulation;
 
+import hvac.simulation.behaviours.ClimateUpdatingBehaviour;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomClimate;
 import hvac.simulation.rooms.RoomWall;
 import jade.core.Agent;
+import jade.core.behaviours.TickerBehaviour;
 
 public class SimulationAgent extends Agent {
     SimulationContext simulationContext = new SimulationContext();
@@ -12,6 +14,18 @@ public class SimulationAgent extends Agent {
     protected void setup() {
         loadMap();
         setDefaultClimate();
+        addBehaviour(new ClimateUpdatingBehaviour(
+                this, 1000, simulationContext, 10f));
+        addBehaviour(new TickerBehaviour(this, 1010) {
+            @Override
+            protected void onTick() {
+                int i = 0;
+                for (Room r : simulationContext.getRoomMap().getRooms()) {
+                    System.out.println("Temperature in room " + (i++) + " is "
+                            + simulationContext.getClimates().get(r).getTemperature());
+                }
+            }
+        });
     }
 
 
@@ -35,15 +49,20 @@ public class SimulationAgent extends Agent {
     }
 
     private void setDefaultClimate() {
+        int i = 0;
         for(Room r : simulationContext.getRoomMap().getRooms()) {
             RoomClimate climate = new RoomClimate();
             climate.setAbsoluteHumidity(0.001f);
             climate.setAcPower(0f);
             climate.setHeaterPower(0f);
             climate.setPeopleInRoom(0);
-            climate.setTemperature(300f);
-            climate.setVentilation(20f);
+            if(i++ == 0) climate.setTemperature(273f+40f);
+            else climate.setTemperature(273f+20f);
+            climate.setVentilation(0.02f);//20L/s == 0.02m^3/s
             simulationContext.getClimates().put(r, climate);
         }
+        simulationContext.getOutsideClimate().setAbsoluteHumidity(0.002f);
+        simulationContext.getOutsideClimate().setPressure(100000f);
+        simulationContext.getOutsideClimate().setTemperature(273f+35f);
     }
 }

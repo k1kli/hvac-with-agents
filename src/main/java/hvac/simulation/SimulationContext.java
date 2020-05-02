@@ -5,6 +5,9 @@ import hvac.simulation.rooms.*;
 import java.util.Hashtable;
 
 public class SimulationContext {
+    private RoomMap roomMap = new RoomMap();
+    private Hashtable<Room, RoomClimate> climates = new Hashtable<>();
+    private OutsideClimate outsideClimate = new OutsideClimate();
     public RoomMap getRoomMap() {
         return roomMap;
     }
@@ -13,6 +16,7 @@ public class SimulationContext {
         return climates;
     }
 
-    private RoomMap roomMap = new RoomMap();
-    private Hashtable<Room, RoomClimate> climates = new Hashtable<>();
+    public OutsideClimate getOutsideClimate() {
+        return outsideClimate;
+    }
 }

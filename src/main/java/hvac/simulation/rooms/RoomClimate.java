@@ -63,5 +63,5 @@ public class RoomClimate {
     private float ventilation;// in m3 per second
     private float absoluteHumidity;//in kg/m^3
     private float relativeHumidity;//ratio (no unit)
-    private int peopleInRoom;
+    private int peopleInRoom = 0;
 }

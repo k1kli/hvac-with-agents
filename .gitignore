@@ -82,4 +82,5 @@ buildNumber.properties
 .mvn/timing.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
-/APDescription.txt
+APDescription.txt
+MTPs-Main-Container.txt

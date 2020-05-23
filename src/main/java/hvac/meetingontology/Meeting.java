@@ -31,6 +31,10 @@ public class Meeting implements Concept, Comparable<Meeting> {
         return endDate;
     }
 
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
+
     @SuppressWarnings("unused")
     public int getPeopleInRoom() {
         return peopleInRoom;
@@ -44,13 +48,13 @@ public class Meeting implements Concept, Comparable<Meeting> {
         this.temperature = Temperature;
     }
 
-    //change to static?
+    //TODO change to static?
     public long millisecondsOverlapping(Meeting meeting){
         long timeDifference = (endDate.before(meeting.getEndDate()) ? endDate : meeting.getEndDate()).getTime()
                 - (startDate.after(meeting.getStartDate()) ? startDate : meeting.getStartDate()).getTime();
         return timeDifference > 0 ? timeDifference : 0;
     }
-    //change to static?
+    //TODO change to static?
     public boolean isOverlapping(Meeting meeting){
         return millisecondsOverlapping(meeting) > 0;
     }

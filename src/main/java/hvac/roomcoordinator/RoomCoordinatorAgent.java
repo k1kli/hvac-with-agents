@@ -2,7 +2,6 @@ package hvac.roomcoordinator;
 
 import hvac.meetingontology.Meeting;
 import hvac.meetingontology.MeetingOntology;
-
 import hvac.meetingontology.Request;
 import hvac.meetingontology.RequestStatus;
 import hvac.simulation.rooms.RoomWall;
@@ -68,10 +67,12 @@ public class RoomCoordinatorAgent extends Agent {
                 }
                 else{
                     if (roomContext.getCurrentMeeting().getEndDate().before(new Date())){
+                        Meeting currentMeeting = roomContext.getCurrentMeeting();
                         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-                        Request request = new Request(roomContext.getCurrentMeeting(), RequestStatus.CANCELLED);
+                        Request request = new Request(currentMeeting, RequestStatus.FINISHED);
                         sendUpdateToUpkeeper(msg, request);
                         roomContext.setCurrentMeeting(null);
+                        roomContext.removeMeeting(currentMeeting.getMeetingID());
                         this.reset(0);
                     }
                     else{

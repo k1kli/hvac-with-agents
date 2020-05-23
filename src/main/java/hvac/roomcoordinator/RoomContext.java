@@ -2,14 +2,9 @@ package hvac.roomcoordinator;
 
 import hvac.meetingontology.Meeting;
 import hvac.simulation.rooms.RoomWall;
-
 import jade.core.AID;
 
-import java.util.AbstractMap;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.*;
 
 public class RoomContext {
     private static final float defaultTemperature = 21;
@@ -80,9 +75,14 @@ public class RoomContext {
         return estimatedTemperature  - defaultTemperature * (float) (timeBusy) / meetingDuration;
     }
 
-    public void removeMeeting(String meetingID){
+    public void removeMeeting(String ID){
+        if (null != getCurrentMeeting() && ID.equals(getCurrentMeeting().getMeetingID())){
+            Meeting currentMeeting = getCurrentMeeting();
+            currentMeeting.setEndDate(new Date(Long.MIN_VALUE));
+            setCurrentMeeting(currentMeeting);
+        }
         for (Meeting meeting:meetingsQueue){
-            if (meeting.getMeetingID().equals(meetingID)){
+            if (meeting.getMeetingID().equals(ID)){
                 meetingsQueue.remove(meeting);
                 return;
             }

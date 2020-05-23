@@ -52,17 +52,26 @@ public class RoomCoordinatorAgent extends Agent {
                     Meeting meeting = roomContext.checkMeetings(new Date());
                     if (null != meeting){
                         roomContext.setCurrentMeeting(meeting);
-                        //send update about starting meeting to RoomUpkeeper
+                        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                        Request request = new Request(roomContext.getCurrentMeeting(), RequestStatus.EXECUTE);
+                        sendUpdateToUpkeeper(msg, request);
                         this.reset(meeting.getEndDate().getTime() - new Date().getTime());
                     }
-                    if (null != roomContext.peekMeeting()){
-                        this.reset(roomContext.peekMeeting().getStartDate().getTime() - new Date().getTime());
+                    else{
+                        if (null != roomContext.peekMeeting()){
+                            this.reset(roomContext.peekMeeting().getStartDate().getTime() - new Date().getTime());
+                        }
+                        else{
+                            this.reset(Long.MAX_VALUE);
+                        }
                     }
                 }
                 else{
                     if (roomContext.getCurrentMeeting().getEndDate().before(new Date())){
+                        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+                        Request request = new Request(roomContext.getCurrentMeeting(), RequestStatus.CANCELLED);
+                        sendUpdateToUpkeeper(msg, request);
                         roomContext.setCurrentMeeting(null);
-                        //send update about meeting end to RoomUpkeeper
                         this.reset(0);
                     }
                     else{
@@ -202,6 +211,7 @@ public class RoomCoordinatorAgent extends Agent {
     private void notUnderstood(ACLMessage msg){
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
+        reply.setContent(msg.getContent());
         send(reply);
     }
 
@@ -222,5 +232,13 @@ public class RoomCoordinatorAgent extends Agent {
             getContentManager().fillContent(msg, request);
         } catch (Exception e){e.printStackTrace();}
         send(msg);
+    }
+
+    private void sendUpdateToUpkeeper(ACLMessage msg, Request request){
+        msg.setConversationId(roomContext.getCurrentMeeting().getMeetingID());
+        msg.setLanguage(codec.getName());
+        msg.setOntology(meetingOntology.getName());
+        msg.addReceiver(roomContext.getMyRoomUpkeeper());
+        fillAndSend(msg, request);
     }
 }

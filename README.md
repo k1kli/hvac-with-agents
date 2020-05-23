@@ -19,3 +19,8 @@ You can name this configuration apropriately.
 
 Press ok and run.
 
+Data provided by <a href="https://www.meteostat.net" title="meteostat" target="_blank">meteostat</a>.
+Meteorological data: Copyright &copy; National Oceanic and Atmospheric Administration (NOAA),
+ Deutscher Wetterdienst (DWD). Learn more about the
+ <a href="https://www.meteostat.net/sources" title="meteostat Sources" target="_blank">sources</a>.
+

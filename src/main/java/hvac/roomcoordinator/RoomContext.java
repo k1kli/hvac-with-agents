@@ -5,8 +5,7 @@ import hvac.simulation.rooms.RoomWall;
 
 import jade.core.AID;
 
-import javafx.util.Pair;
-
+import java.util.AbstractMap;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +18,7 @@ public class RoomContext {
     private HashMap<AID, RoomWall> myNeighbours;
     private Meeting currentMeeting;
     private PriorityQueue<Meeting> meetingsQueue = new PriorityQueue<>();
-    private HashMap<String, Pair<Meeting, HashMap<AID, Float>>> neighboursForecastStatus = new HashMap<>();
+    private Map<String, AbstractMap.SimpleEntry<Meeting, Map<AID, Float>>> neighboursForecastStatus = new HashMap<>();
 
     RoomContext(AID myRoomUpkeeper, AID coordinator, HashMap<AID, RoomWall>  myNeighbours){
         this.coordinator = coordinator;
@@ -91,7 +90,7 @@ public class RoomContext {
     }
 
     public void newForecastEntry(Meeting meeting){
-        neighboursForecastStatus.put(meeting.getMeetingID(), new Pair<>(meeting, new HashMap<>()));
+        neighboursForecastStatus.put(meeting.getMeetingID(), new AbstractMap.SimpleEntry<>(meeting, new HashMap<>()));
     }
 
     public void removeForecastEntry(String ID){

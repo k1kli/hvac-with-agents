@@ -61,7 +61,7 @@ public class RoomContext {
         return meetingsQueue.stream().noneMatch(meeting::isOverlapping);
     }
 
-    public float estimatedTemperature(Meeting meeting){
+    public float estimateTemperatureForNeighbour(Meeting meeting){
         float estimatedTemperature = defaultTemperature;
         long timeBusy = 0;
         long meetingDuration = meeting.getEndDate().getTime() - meeting.getStartDate().getTime();
@@ -77,9 +77,7 @@ public class RoomContext {
 
     public void removeMeeting(String ID){
         if (null != getCurrentMeeting() && ID.equals(getCurrentMeeting().getMeetingID())){
-            Meeting currentMeeting = getCurrentMeeting();
             currentMeeting.setEndDate(new Date(Long.MIN_VALUE));
-            setCurrentMeeting(currentMeeting);
         }
         for (Meeting meeting:meetingsQueue){
             if (meeting.getMeetingID().equals(ID)){

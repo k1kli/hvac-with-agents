@@ -30,6 +30,8 @@ public class RoomCoordinatorAgent extends Agent {
         getContentManager().registerOntology(meetingOntology);
         Object[] args =  getArguments();
         HashMap<AID, RoomWall> roomConfig = null;
+        //checking if map was passed correctly, unfortunately this is IMO the best and proper way
+        // to detect and avoid errors and warnings
         try {
             @SuppressWarnings("unchecked")
             HashMap<AID, RoomWall> hashMap = (HashMap<AID, RoomWall>) args[2];
@@ -148,7 +150,7 @@ public class RoomCoordinatorAgent extends Agent {
         if (null == request){
             return;
         }
-        request.getMeeting().setTemperature(roomContext.estimatedTemperature(request.getMeeting()));
+        request.getMeeting().setTemperature(roomContext.estimateTemperatureForNeighbour(request.getMeeting()));
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.INFORM);
         request.setStatus(RequestStatus.ESTIMATION);

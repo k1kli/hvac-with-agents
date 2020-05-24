@@ -1,5 +1,6 @@
 package hvac.simulation;
 
+import hvac.database.Connection;
 import hvac.simulation.behaviours.ClimateUpdatingBehaviour;
 import hvac.simulation.machinery.AirConditioner;
 import hvac.simulation.machinery.Heater;
@@ -7,33 +8,70 @@ import hvac.simulation.machinery.Ventilator;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomClimate;
 import hvac.simulation.rooms.RoomWall;
+import hvac.time.DateTimeSimulator;
+import hvac.weather.DatabaseForecastProvider;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 
 @SuppressWarnings("unused")
 public class SimulationAgent extends Agent {
     SimulationContext simulationContext = new SimulationContext();
-
+    Connection connection;
     @Override
     protected void setup() {
+        if (getArguments() == null || getArguments().length != 2) {
+            usage("Wrong args num");
+            doDelete();
+            return;
+        }
+        LocalDateTime startTime;
+        float timeScale;
+        try {
+            timeScale = Float.parseFloat(getArguments()[0].toString());
+            startTime = LocalDateTime.parse(getArguments()[1].toString(),
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } catch (NumberFormatException | DateTimeParseException e) {
+            usage(e.getMessage());
+            doDelete();
+            return;
+        }
+        DateTimeSimulator.init(startTime, timeScale);
+        connection = new Connection();
         loadMap();
         setDefaultClimate();
         addBehaviour(new ClimateUpdatingBehaviour(
-                this, 1000, simulationContext, 10f));
+                this, 1000, simulationContext, timeScale,
+                new DatabaseForecastProvider(connection)));
         Room r = simulationContext.getRoomMap().getRooms().iterator().next();
         addBehaviour(new TickerBehaviour(this, 1010) {
             @Override
             protected void onTick() {
-                    System.out.println("Room 1 currently has:");
-                    RoomClimate climate = simulationContext.getClimates().get(r);
-                    float temp = climate.getTemperature() - 273f;
-                    float rh = climate.getRelativeHumidity()*100f;
-                    float airQuality = climate.getAirQuality()*100f;
-                    System.out.println("Temperature " + temp + " degrees C");
-                    System.out.println("Relative humidity " + rh + "%");
-                    System.out.println("Air quality " + airQuality + "%");
+                System.out.println("Room 1 currently has:");
+                RoomClimate climate = simulationContext.getClimates().get(r);
+                float temp = climate.getTemperature() - 273f;
+                float otemp = simulationContext.getOutsideClimate().getTemperature() - 273f;
+                float rh = climate.getRelativeHumidity();
+                float ah = climate.getAbsoluteHumidity();
+                float pr = simulationContext.getOutsideClimate().getPressure();
+                float airQuality = climate.getAirQuality() * 100f;
+                System.out.println("Now is " + DateTimeSimulator.getCurrentDate());
+                System.out.println("Temperature " + temp + "(" + otemp + ") degrees C");
+                System.out.println("Relative humidity " + rh + "% ah=" + ah + ", pressure=" + pr);
+                System.out.println("Air quality " + airQuality + "%");
             }
         });
+    }
+
+    private void usage(String err) {
+        System.err.println("-------- Simulation agent usage --------------");
+        System.err.println("simulation:hvac.simulation.SimulationAgent(timeScale, start_date)");
+        System.err.println("timescale - floating point value indicating speed of passing time");
+        System.err.println("Date from which to start simulating \"yyyy-MM-dd HH:mm:ss\"");
+        System.err.println("err:" + err);
     }
 
     private void loadMap() {
@@ -68,8 +106,10 @@ public class SimulationAgent extends Agent {
             else climate.setTemperature(273f+20f);
             simulationContext.getClimates().put(r, climate);
         }
-        simulationContext.getOutsideClimate().setAbsoluteHumidity(0.002f);
-        simulationContext.getOutsideClimate().setPressure(100000f);
-        simulationContext.getOutsideClimate().setTemperature(273f+35f);
+    }
+
+    @Override
+    protected void takeDown() {
+        if(connection != null) connection.close();
     }
 }

@@ -95,7 +95,8 @@ public class WeatherSaver {
         float saturationWaterVapour = (float)(pressureFunctionValue * 6.112
                 * Math.exp(17.62*weatherEntry.temperature/(243.12+weatherEntry.temperature)));
         //https://planetcalc.com/2167/
-        float currentWaterVapour = saturationWaterVapour * weatherEntry.humidity / 100f;
+        float currentWaterVapour = saturationWaterVapour * weatherEntry.humidity;
+        float result = currentWaterVapour/(461.5f*(weatherEntry.temperature+273));
         return currentWaterVapour/(461.5f*(weatherEntry.temperature+273));
     }
 }

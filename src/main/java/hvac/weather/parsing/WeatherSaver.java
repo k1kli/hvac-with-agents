@@ -2,6 +2,7 @@ package hvac.weather.parsing;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
 import hvac.database.Connection;
 import hvac.database.entities.WeatherSnapshot;
 
@@ -12,14 +13,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class WeatherSaver {
 
     private static class WeatherData {
         public WeatherEntry[] data;
         public static class WeatherEntry {
-            public Date time_local;
+            public LocalDateTime time_local;
             public float temperature = 303;
             public float humidity = 80;
             public float pressure = 1000;
@@ -30,7 +32,10 @@ public class WeatherSaver {
     //saves weather to database because it is easier to read from it than from file
     public static void main(String[] args) {
         Gson gson = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd HH:mm").create();
+                .registerTypeAdapter(LocalDateTime.class, (JsonDeserializer<LocalDateTime>)
+                (json, type, jsonDeserializationContext) -> LocalDateTime.parse(
+                        json.getAsJsonPrimitive().getAsString(),
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))).create();
         File dataFile = getFileFromResources();
         System.out.println("Opening " + dataFile.getName() + " and establishing db connection");
         try(BufferedReader reader = new BufferedReader(new FileReader(dataFile));
@@ -72,7 +77,6 @@ public class WeatherSaver {
     }
     private static WeatherSnapshot[] processWeatherData(WeatherData weatherData) {
         WeatherSnapshot[] result = new WeatherSnapshot[weatherData.data.length];
-        int count28 = 0;
         for(int i = 0; i < result.length; i++) {
             result[i] = new WeatherSnapshot();
             result[i].setPressureHPa(weatherData.data[i].pressure);

@@ -1,5 +1,5 @@
 # hvac-with-agents
-To run this project in InteliJ IDEA:
+### Running in IntelliJ IDEA
 File > New > Project from version Control
 Paste in this project's github url
 
@@ -19,8 +19,21 @@ You can name this configuration apropriately.
 
 Press ok and run.
 
-Data provided by <a href="https://www.meteostat.net" title="meteostat" target="_blank">meteostat</a>.
+### Database
+To use this project you need MySQL database running locally on port 3306.
+[Download link](https://dev.mysql.com/downloads/)
+
+Database initialization query can be found in src/main/scripts/create_database.sql.
+To enter it on windows run mysql command line client, log in as root and paste in scripts contents.
+
+You can change used database in src/main/resources/META-INF/persistence.xml file.
+
+To fill database with weather data run with starting class hvac.weather.parsing.WeatherSaver
+This will also delete previous weather data.
+
+### Weather data
+Data provided by [meteostat](https://www.meteostat.net).
 Meteorological data: Copyright &copy; National Oceanic and Atmospheric Administration (NOAA),
  Deutscher Wetterdienst (DWD). Learn more about the
- <a href="https://www.meteostat.net/sources" title="meteostat Sources" target="_blank">sources</a>.
+ [meteostat Sources](https://www.meteostat.net/sources).
 

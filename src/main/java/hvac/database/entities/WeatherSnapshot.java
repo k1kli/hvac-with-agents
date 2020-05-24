@@ -1,7 +1,8 @@
 package hvac.database.entities;
 
 import javax.persistence.*;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table( name = "WEATHER_SNAPSHOT",
@@ -11,14 +12,14 @@ import java.util.Date;
     })
 public class WeatherSnapshot {
     private Long id;
-    private Date date;
+    private LocalDateTime date;
     private float temperatureKelvin;
     private float pressureHPa;
     private float absoluteHumidity;//in kg/m^3
 
     public WeatherSnapshot(){}//for hibernate
 
-    public WeatherSnapshot(Date date, float temperatureKelvin, float pressureHPa, float absoluteHumidity) {
+    public WeatherSnapshot(LocalDateTime date, float temperatureKelvin, float pressureHPa, float absoluteHumidity) {
         //for application use
         this.date = date;
         this.temperatureKelvin = temperatureKelvin;
@@ -37,13 +38,12 @@ public class WeatherSnapshot {
         this.id = id;
     }
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "WEATHER_TIMESTAMP")
-    public Date getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 
@@ -72,5 +72,21 @@ public class WeatherSnapshot {
 
     public void setAbsoluteHumidity(float absoluteHumidity) {
         this.absoluteHumidity = absoluteHumidity;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WeatherSnapshot that = (WeatherSnapshot) o;
+        return Float.compare(that.temperatureKelvin, temperatureKelvin) == 0 &&
+                Float.compare(that.pressureHPa, pressureHPa) == 0 &&
+                Float.compare(that.absoluteHumidity, absoluteHumidity) == 0 &&
+                date.equals(that.date);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(date, temperatureKelvin, pressureHPa, absoluteHumidity);
     }
 }

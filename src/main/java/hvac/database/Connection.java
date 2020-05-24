@@ -13,6 +13,11 @@ public class Connection implements Closeable {
                 "hvac" );
     }
 
+    public Connection(String persistenceUnit) {
+        entityManagerFactory = Persistence.createEntityManagerFactory(
+                persistenceUnit );
+    }
+
     public EntityManagerFactory getEntityManagerFactory() {
         return entityManagerFactory;
     }

@@ -30,18 +30,20 @@ public class DatabaseForecastProviderTest {
     @Test
     void getWeatherBetween() {
         //given
+        LocalDateTime expectedDate = LocalDateTime.parse("2020-04-10 10:00", formatter);
+        WeatherSnapshot[] expected = new WeatherSnapshot[] {
+                new WeatherSnapshot(expectedDate,
+                        250f, 1000f, 0.1f),
+        };
         EntityManager entityManager =  connection.createEntityManager();
         entityManager.getTransaction().begin();
         WeatherSnapshot[] saved = new WeatherSnapshot[] {
-                new WeatherSnapshot(LocalDateTime.parse("2020-04-10 10:00", formatter),
+                new WeatherSnapshot(expectedDate,
                         250f, 1000f, 0.1f),
-                new WeatherSnapshot(LocalDateTime.parse("2020-03-10 10:00", formatter),
+                new WeatherSnapshot(expectedDate.plusMonths(1),
                         250f, 1000f, 0.1f),
-                new WeatherSnapshot(LocalDateTime.parse("2020-04-15 10:00", formatter),
+                new WeatherSnapshot(expectedDate.minusMonths(1),
                         100f, 1000f, 0.1f),
-        };
-        WeatherSnapshot[] expected = new WeatherSnapshot[] {
-                saved[0], saved[2]
         };
         for(WeatherSnapshot savedEl : saved)
             entityManager.persist(savedEl);
@@ -51,8 +53,8 @@ public class DatabaseForecastProviderTest {
         //when
         ForecastProvider provider = new DatabaseForecastProvider(connection);
         WeatherSnapshot[] actual = provider.getWeatherBetween(
-                LocalDateTime.parse("2020-04-01 10:00", formatter),
-                LocalDateTime.parse("2020-05-01 10:00", formatter));
+                expectedDate.minusWeeks(1),
+                expectedDate.plusWeeks(1));
 
         //then
         assertArrayEquals(expected, actual);
@@ -61,14 +63,15 @@ public class DatabaseForecastProviderTest {
     @Test
     void getWeatherAt() {
         //given
+        LocalDateTime expectedTime = LocalDateTime.parse("2020-04-10 10:00", formatter);
         EntityManager entityManager =  connection.createEntityManager();
         entityManager.getTransaction().begin();
         WeatherSnapshot[] saved = new WeatherSnapshot[] {
-                new WeatherSnapshot(LocalDateTime.parse("2020-04-10 10:00", formatter),
+                new WeatherSnapshot(expectedTime,
                         250f, 1000f, 0.1f),
-                new WeatherSnapshot(LocalDateTime.parse("2020-04-10 11:00", formatter),
+                new WeatherSnapshot(expectedTime.plusHours(1),
                         250f, 1000f, 0.1f),
-                new WeatherSnapshot(LocalDateTime.parse("2020-04-10 12:00", formatter),
+                new WeatherSnapshot(expectedTime.minusHours(1),
                         100f, 1000f, 0.1f),
         };
         WeatherSnapshot expected = saved[0];
@@ -79,7 +82,8 @@ public class DatabaseForecastProviderTest {
 
         //when
         ForecastProvider provider = new DatabaseForecastProvider(connection);
-        WeatherSnapshot actual = provider.getWeatherAt(LocalDateTime.parse("2020-04-10 10:30", formatter));
+        //provides time from latest snapshot before given time
+        WeatherSnapshot actual = provider.getWeatherAt(expectedTime.plusMinutes(30));
 
         //then
         assertEquals(expected, actual);

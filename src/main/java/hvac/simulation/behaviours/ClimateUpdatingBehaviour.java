@@ -1,27 +1,37 @@
 package hvac.simulation.behaviours;
 
+import hvac.database.entities.WeatherSnapshot;
 import hvac.simulation.SimulationContext;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomClimate;
 import hvac.simulation.rooms.RoomLink;
+import hvac.time.DateTimeSimulator;
+import hvac.weather.interfaces.ForecastProvider;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Hashtable;
 
 public class ClimateUpdatingBehaviour extends TickerBehaviour {
     private SimulationContext context;
     private float timeScale;
+    private ForecastProvider forecastProvider;
+    private WeatherSnapshot[] cachedSnapshots;
 
     public ClimateUpdatingBehaviour(Agent agent,
                                     int updateTickTime,
-                                    SimulationContext context, float timeScale) {
+                                    SimulationContext context, float timeScale,
+                                    ForecastProvider forecastProvider) {
         super(agent, updateTickTime);
         this.context = context;
         this.timeScale = timeScale;
+        this.forecastProvider = forecastProvider;
     }
     @Override
     protected void onTick() {
+        updateOutsideClimate();
         Hashtable<Room, RoomClimate> newClimates = new Hashtable<>();
         for(Room r : context.getRoomMap().getRooms()) {
             RoomClimate oldClimate = context.getClimates().get(r);
@@ -40,6 +50,34 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
         for(Room r : context.getRoomMap().getRooms()) {
             context.getClimates().put(r, newClimates.get(r));
         }
+    }
+
+    private void updateOutsideClimate() {
+        if(cachedSnapshots == null ||
+                cachedSnapshots[cachedSnapshots.length - 1]
+                        .getDate().compareTo(DateTimeSimulator.getCurrentDate()) < 0) {
+            cachedSnapshots = forecastProvider.getWeatherBetween(DateTimeSimulator.getCurrentDate(),
+                    DateTimeSimulator.getCurrentDate().plusHours(24));
+            if(cachedSnapshots.length == 0) throw new RuntimeException("Out of data");
+            Arrays.sort(cachedSnapshots, Comparator.comparing(WeatherSnapshot::getDate));
+        }
+        if(cachedSnapshots[0].getDate().compareTo(DateTimeSimulator.getCurrentDate()) >= 0) {
+            updateOutsideClimateFromSnapshot(cachedSnapshots[0]);
+            return;
+        }
+        for(int i = 0; i < cachedSnapshots.length; i++) {
+            if(cachedSnapshots[i].getDate().compareTo(DateTimeSimulator.getCurrentDate()) >= 0) {
+                updateOutsideClimateFromSnapshot(cachedSnapshots[i-1]);
+                return;
+            }
+        }
+        updateOutsideClimateFromSnapshot(cachedSnapshots[cachedSnapshots.length-1]);
+    }
+
+    private void updateOutsideClimateFromSnapshot(WeatherSnapshot snapshot) {
+        context.getOutsideClimate().setTemperature(snapshot.getTemperature());
+        context.getOutsideClimate().setAbsoluteHumidity(snapshot.getAbsoluteHumidity());
+        context.getOutsideClimate().setPressure(snapshot.getPressure());
     }
 
 
@@ -127,7 +165,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
         float saturationWaterVapour = (float)(pressureFunctionValue * 6.112
                 * Math.exp(17.62*tempCelsius/(243.12+tempCelsius)));
         float currentWaterVapour = newClimate.getAbsoluteHumidity() * 461.5f * newClimate.getTemperature();
-        return currentWaterVapour/saturationWaterVapour * 0.01f;
+        return currentWaterVapour/saturationWaterVapour;
     }
 
     private float calculateAirQualityFor(Room r, RoomClimate oldClimate) {

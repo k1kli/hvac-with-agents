@@ -1,9 +1,9 @@
 package hvac.simulation;
 
 public class OutsideClimate {
-    private float pressure;
-    private float temperature;
-    private float absoluteHumidity;
+    private float pressure;//in pascals
+    private float temperature;//in kelvins
+    private float absoluteHumidity;//in kg/m3
 
     public float getPressure() {
         return pressure;

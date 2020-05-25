@@ -75,9 +75,9 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
     }
 
     private void updateOutsideClimateFromSnapshot(WeatherSnapshot snapshot) {
-        context.getOutsideClimate().setTemperature(snapshot.getTemperatureKelvin());
+        context.getOutsideClimate().setTemperature(snapshot.getTemperature());
         context.getOutsideClimate().setAbsoluteHumidity(snapshot.getAbsoluteHumidity());
-        context.getOutsideClimate().setPressure(snapshot.getPressureHPa() * 100);
+        context.getOutsideClimate().setPressure(snapshot.getPressure());
     }
 
 

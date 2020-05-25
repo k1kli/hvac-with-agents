@@ -13,17 +13,17 @@ import java.util.Objects;
 public class WeatherSnapshot {
     private Long id;
     private LocalDateTime date;
-    private float temperatureKelvin;
-    private float pressureHPa;
+    private float temperature;//in kelvins
+    private float pressure;//in pascals N/m^2
     private float absoluteHumidity;//in kg/m^3
 
     public WeatherSnapshot(){}//for hibernate
 
-    public WeatherSnapshot(LocalDateTime date, float temperatureKelvin, float pressureHPa, float absoluteHumidity) {
+    public WeatherSnapshot(LocalDateTime date, float temperature, float pressure, float absoluteHumidity) {
         //for application use
         this.date = date;
-        this.temperatureKelvin = temperatureKelvin;
-        this.pressureHPa = pressureHPa;
+        this.temperature = temperature;
+        this.pressure = pressure;
         this.absoluteHumidity = absoluteHumidity;
     }
 
@@ -48,21 +48,21 @@ public class WeatherSnapshot {
     }
 
     @Column(name = "TEMPERATURE")
-    public float getTemperatureKelvin() {
-        return temperatureKelvin;
+    public float getTemperature() {
+        return temperature;
     }
 
-    public void setTemperatureKelvin(float temperatureKelvin) {
-        this.temperatureKelvin = temperatureKelvin;
+    public void setTemperature(float temperature) {
+        this.temperature = temperature;
     }
 
     @Column(name = "PRESSURE")
-    public float getPressureHPa() {
-        return pressureHPa;
+    public float getPressure() {
+        return pressure;
     }
 
-    public void setPressureHPa(float pressureHPa) {
-        this.pressureHPa = pressureHPa;
+    public void setPressure(float pressure) {
+        this.pressure = pressure;
     }
 
     @Column(name = "HUMIDITY")
@@ -79,14 +79,14 @@ public class WeatherSnapshot {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         WeatherSnapshot that = (WeatherSnapshot) o;
-        return Float.compare(that.temperatureKelvin, temperatureKelvin) == 0 &&
-                Float.compare(that.pressureHPa, pressureHPa) == 0 &&
+        return Float.compare(that.temperature, temperature) == 0 &&
+                Float.compare(that.pressure, pressure) == 0 &&
                 Float.compare(that.absoluteHumidity, absoluteHumidity) == 0 &&
                 date.equals(that.date);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(date, temperatureKelvin, pressureHPa, absoluteHumidity);
+        return Objects.hash(date, temperature, pressure, absoluteHumidity);
     }
 }

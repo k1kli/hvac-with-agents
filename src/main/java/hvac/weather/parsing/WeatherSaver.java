@@ -18,13 +18,14 @@ import java.time.format.DateTimeFormatter;
 
 public class WeatherSaver {
 
+    //only for parsing json
     private static class WeatherData {
         public WeatherEntry[] data;
         public static class WeatherEntry {
             public LocalDateTime time_local;
-            public float temperature = 303;
-            public float humidity = 80;
-            public float pressure = 1000;
+            public float temperature = 20;//in celsius
+            public float humidity = 80;//relative humidity in percent
+            public float pressure = 1000;//in hPa has to be because that's whats in the file
         }
     }
 
@@ -79,24 +80,27 @@ public class WeatherSaver {
         WeatherSnapshot[] result = new WeatherSnapshot[weatherData.data.length];
         for(int i = 0; i < result.length; i++) {
             result[i] = new WeatherSnapshot();
-            result[i].setPressureHPa(weatherData.data[i].pressure);
-            result[i].setTemperatureKelvin(weatherData.data[i].temperature + 273);
+            result[i].setPressure(weatherData.data[i].pressure*100);//convert hPa -> Pa
+            result[i].setTemperature(weatherData.data[i].temperature + 273);//convert deg C to K
             result[i].setDate(weatherData.data[i].time_local);
-            result[i].setAbsoluteHumidity(calculateAbsoluteHumidity(weatherData.data[i]));
+            result[i].setAbsoluteHumidity(calculateAbsoluteHumidity(weatherData.data[i]));//convert relative to absolute
         }
         return result;
     }
 
     private static float calculateAbsoluteHumidity(WeatherData.WeatherEntry weatherEntry) {
         //https://planetcalc.com/2161/
+        //pressure needs to be in hPa
         double pressureFunctionValue = 1.0016
                 + 0.00000315 * weatherEntry.pressure
                 - 0.074 / weatherEntry.pressure;
+        //temperature needs to be in celsius
         float saturationWaterVapour = (float)(pressureFunctionValue * 6.112
-                * Math.exp(17.62*weatherEntry.temperature/(243.12+weatherEntry.temperature)));
+                * Math.exp(17.62*weatherEntry.temperature/(243.12+weatherEntry.temperature)));//unit hPa
         //https://planetcalc.com/2167/
-        float currentWaterVapour = saturationWaterVapour * weatherEntry.humidity;
-        float result = currentWaterVapour/(461.5f*(weatherEntry.temperature+273));
+        float currentWaterVapour = saturationWaterVapour * weatherEntry.humidity;//unit Pa
+        // *100 to change hPa -> Pa,
+        // /100 to change humidity percent to humidity ratio
         return currentWaterVapour/(461.5f*(weatherEntry.temperature+273));
     }
 }

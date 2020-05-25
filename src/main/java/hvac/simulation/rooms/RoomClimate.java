@@ -12,7 +12,7 @@ public class RoomClimate {
     private float absoluteHumidity;//in kg/m^3
     private float relativeHumidity;//ratio (no unit)
     private int peopleInRoom = 0;
-    private float airQuality;
+    private float airQuality;//ratio (no unit)
 
     public RoomClimate(Heater heater, AirConditioner airConditioner, Ventilator ventilator) {
         this.heater = heater;

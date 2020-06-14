@@ -15,6 +15,7 @@
         </description>
 
         <class>hvac.database.entities.WeatherSnapshot</class>
+        <class>hvac.database.entities.Meeting</class>
 
         <properties>
             <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>

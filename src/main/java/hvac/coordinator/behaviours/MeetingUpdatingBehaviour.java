@@ -6,14 +6,12 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.Events;
 import hvac.calendar.CalendarException;
-import hvac.database.Connection;
+import hvac.coordinator.CoordinatorContext;
+import hvac.coordinator.Meeting;
 import hvac.database.entities.Employee;
-import hvac.database.entities.Meeting;
 import hvac.time.DateTimeSimulator;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 
 import java.sql.Date;
 import java.time.Instant;
@@ -28,12 +26,13 @@ import java.util.stream.Collectors;
 
 public class MeetingUpdatingBehaviour extends TickerBehaviour {
     private Calendar calendar;
-    public Connection database;
+    private CoordinatorContext context;
 
-    public MeetingUpdatingBehaviour(Agent a, long period, Calendar calendar, Connection database) {
+    public MeetingUpdatingBehaviour(Agent a, long period, Calendar calendar,
+                                    CoordinatorContext context) {
         super(a, period);
         this.calendar = calendar;
-        this.database = database;
+        this.context = context;
     }
 
     @Override
@@ -48,14 +47,11 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
             return;
         }
         List<Meeting> calendarMeetings = constructFromCalendar(calendarEvents);
-        List<Meeting> matchingFromDb = getMatchingFromDb(calendarMeetings);
-        Set<String> idsInDb = matchingFromDb.stream().map(Meeting::getId)
-                .collect(Collectors.toSet());
-        List<Meeting> notInDb = calendarMeetings.stream()
-                .filter(meeting -> !idsInDb.contains(meeting.getId()))
-                .collect(Collectors.toList());
-        addMeetingsToDb(notInDb);
-        for(Meeting meeting : matchingFromDb) {
+        List<Meeting> meetingsToAdd = filterMeetings(calendarMeetings);
+        context.getMeetingsToAssign()
+                .putAll(meetingsToAdd.stream()
+                        .collect(Collectors.toMap(Meeting::getId, Function.identity())));
+        for(Meeting meeting : context.getMeetingsToAssign().values()) {
             System.out.println(meeting.getId() + " " + meeting.getStartDate() + " " + meeting.getEndDate());
             for(Employee emp : meeting.getEmployees())
                 System.out.println("    -"+emp.getAlias());
@@ -70,7 +66,7 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
 
             DateTime minTime = new DateTime(Date.from(now.atZone(ZoneId.systemDefault()).toInstant()),
                     TimeZone.getDefault());
-            DateTime maxTime = new DateTime(Date.from(now.plusMonths(1).atZone(ZoneId.systemDefault()).toInstant()),
+            DateTime maxTime = new DateTime(Date.from(now.plusWeeks(1).atZone(ZoneId.systemDefault()).toInstant()),
                     TimeZone.getDefault());
             Events events = calendar.events().list("primary")
                     .setTimeMin(minTime)
@@ -108,27 +104,14 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
                 employeeSet);
     }
 
-    public List<Meeting> getMatchingFromDb(List<Meeting> fromCalendar)
+    public List<Meeting> filterMeetings(List<Meeting> fromCalendar)
     {
-        Session session = database.createEntityManager().unwrap(Session.class);
-        List<Meeting> result = session.createQuery("from Meeting m join fetch m.employees where m.id in :ids", Meeting.class)
-                        .setParameter("ids", fromCalendar
-                            .stream()
-                            .map(Meeting::getId)
-                            .collect(Collectors.toList()))
-                        .getResultList();
-        session.close();
-        return result;
-    }
-    public void addMeetingsToDb(List<Meeting> meetings)
-    {
-        Session session = database.createEntityManager().unwrap(Session.class);
-        Transaction t = session.beginTransaction();
-        for(Meeting m : meetings)
-        {
-            session.save(m);
-        }
-        t.commit();
-        session.close();
+        return fromCalendar.stream()
+                //only get meetings one week ahead
+                .filter(m->m.getStartDate().isBefore(DateTimeSimulator.getCurrentDate().plusWeeks(1)))
+                .filter(m->
+                        !context.getAssignedMeetings().containsKey(m.getId()) &&
+                        !context.getMeetingsToAssign().containsKey(m.getId()))
+                .collect(Collectors.toList());
     }
 }

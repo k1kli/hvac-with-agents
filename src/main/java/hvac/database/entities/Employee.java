@@ -1,8 +1,6 @@
 package hvac.database.entities;
 
 import javax.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table( name = "EMPLOYEE",
@@ -12,8 +10,6 @@ import java.util.Set;
 public class Employee {
     private int id;
     private String alias;
-
-    Set<Meeting> meetings = new HashSet<>();
 
     public Employee(){}//for hibernate
 
@@ -39,14 +35,5 @@ public class Employee {
 
     public void setAlias(String alias) {
         this.alias = alias;
-    }
-
-    @ManyToMany(mappedBy = "employees")
-    public Set<Meeting> getMeetings() {
-        return meetings;
-    }
-
-    public void setMeetings(Set<Meeting> meetings) {
-        this.meetings = meetings;
     }
 }

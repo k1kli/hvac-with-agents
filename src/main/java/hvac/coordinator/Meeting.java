@@ -1,15 +1,11 @@
-package hvac.database.entities;
+package hvac.coordinator;
 
-import javax.persistence.*;
+import hvac.database.entities.Employee;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity
-@Table( name = "MEETING",
-        indexes = {
-                @Index(columnList = "ID", name = "meeting_id")
-        })
 public class Meeting {
     private String id;
     private LocalDateTime startDate;
@@ -17,9 +13,8 @@ public class Meeting {
     private String roomId;
 
 
-    Set<Employee> employees = new HashSet<>();
+    Set<Employee> employees;
 
-    public Meeting(){}//for hibernate
 
     public Meeting(String id, LocalDateTime startDate, LocalDateTime endDate, String roomId, Set<Employee> employees) {
         //for application use
@@ -30,8 +25,6 @@ public class Meeting {
         this.employees = new HashSet<>(employees);
     }
 
-    @Id
-    @Column(name = "ID", updatable = false, nullable = false)
     public String getId() {
         return id;
     }
@@ -40,7 +33,6 @@ public class Meeting {
         this.id = id;
     }
 
-    @Column(name = "START_DATE", nullable = false)
     public LocalDateTime getStartDate() {
         return startDate;
     }
@@ -49,7 +41,6 @@ public class Meeting {
         this.startDate = startDate;
     }
 
-    @Column(name = "END_DATE", nullable = false)
     public LocalDateTime getEndDate() {
         return endDate;
     }
@@ -58,7 +49,6 @@ public class Meeting {
         this.endDate = endDate;
     }
 
-    @Column(name = "ROOM_ID", nullable = false)
     public String getRoomId() {
         return roomId;
     }
@@ -67,12 +57,6 @@ public class Meeting {
         this.roomId = roomId;
     }
 
-    @ManyToMany(cascade = { CascadeType.ALL })
-    @JoinTable(
-            name = "MEETING_EMPLOYEE",
-            joinColumns = { @JoinColumn(name = "MEETING_ID") },
-            inverseJoinColumns = { @JoinColumn(name = "EMPLOYEE_ID") }
-    )
     public Set<Employee> getEmployees() {
         return employees;
     }

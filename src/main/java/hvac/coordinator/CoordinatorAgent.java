@@ -16,6 +16,7 @@ import java.time.format.DateTimeParseException;
 public class CoordinatorAgent extends Agent {
     Connection database;
     Calendar calendar;
+    CoordinatorContext context = new CoordinatorContext();
     @Override
     protected void setup() {
         initTimeFromArgs();
@@ -29,7 +30,7 @@ public class CoordinatorAgent extends Agent {
             doDelete();
             return;
         }
-        this.addBehaviour(new MeetingUpdatingBehaviour(this, 1000, calendar, database));
+        this.addBehaviour(new MeetingUpdatingBehaviour(this, 1000, calendar, context));
     }
 
     private void initTimeFromArgs() {

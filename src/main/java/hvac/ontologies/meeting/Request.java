@@ -1,4 +1,4 @@
-package hvac.meetingontology;
+package hvac.ontologies.meeting;
 
 import jade.content.AgentAction;
 

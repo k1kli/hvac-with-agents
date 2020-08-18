@@ -1,4 +1,4 @@
-package hvac.meetingontology;
+package hvac.ontologies.meeting;
 
 public enum RequestStatus {
     CANCELLED,

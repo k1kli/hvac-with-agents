@@ -2,11 +2,15 @@ package hvac.weatherforecaster;
 
 import hvac.database.Connection;
 import hvac.database.entities.WeatherSnapshot;
+import hvac.ontologies.weather.WeatherOntology;
 import hvac.time.DateTimeSimulator;
 import hvac.weather.DatabaseForecastProvider;
 import hvac.weather.interfaces.ForecastProvider;
+import hvac.weatherforecaster.behaviours.ForecastProvidingBehaviour;
 import hvac.weatherforecaster.behaviours.WeatherGettingBehaviour;
+import jade.content.lang.sl.SLCodec;
 import jade.core.Agent;
+import jade.domain.FIPANames;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,9 +18,9 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class WeatherForecasterAgent extends Agent {
-    private Connection database;
-    private List<WeatherSnapshot> oneWeekPlusWeather = new ArrayList<>();
+    private final List<WeatherSnapshot> oneWeekPlusWeather = new ArrayList<>();
 
     @Override
     protected void setup() {
@@ -37,10 +41,14 @@ public class WeatherForecasterAgent extends Agent {
             return;
         }
         DateTimeSimulator.init(startTime, timeScale);
-        database = new Connection();
+        getContentManager().registerLanguage(new SLCodec(),
+                FIPANames.ContentLanguage.FIPA_SL0);
+        getContentManager().registerOntology(WeatherOntology.getInstance());
+        Connection database = new Connection();
         ForecastProvider provider = new DatabaseForecastProvider(database);
         int weatherGettingSpeed = (int)(1000*3600/timeScale);
         addBehaviour(new WeatherGettingBehaviour(this, weatherGettingSpeed, provider, oneWeekPlusWeather));
+        addBehaviour(new ForecastProvidingBehaviour(this, oneWeekPlusWeather));
     }
 
     private void usage(String err) {

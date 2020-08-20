@@ -1,8 +1,8 @@
 package hvac.simulation.rooms;
 
 public class RoomLink {
-    private Room neighbor;
-    private RoomWall wall;
+    private final Room neighbor;
+    private final RoomWall wall;
 
     public RoomLink(Room neighbor, RoomWall wall) {
         this.neighbor = neighbor;

@@ -15,9 +15,9 @@ import java.util.Comparator;
 import java.util.Hashtable;
 
 public class ClimateUpdatingBehaviour extends TickerBehaviour {
-    private SimulationContext context;
-    private float timeScale;
-    private ForecastProvider forecastProvider;
+    private final SimulationContext context;
+    private final float timeScale;
+    private final ForecastProvider forecastProvider;
     private WeatherSnapshot[] cachedSnapshots;
 
     public ClimateUpdatingBehaviour(Agent agent,
@@ -34,7 +34,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
         updateOutsideClimate();
         Hashtable<Room, RoomClimate> newClimates = new Hashtable<>();
         for(Room r : context.getRoomMap().getRooms()) {
-            RoomClimate oldClimate = context.getClimates().get(r);
+            RoomClimate oldClimate = context.getClimates().get(r.getId());
             RoomClimate newClimate = new RoomClimate(
                     oldClimate.getHeater(),
                     oldClimate.getAirConditioner(),
@@ -48,7 +48,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
             newClimates.put(r, newClimate);
         }
         for(Room r : context.getRoomMap().getRooms()) {
-            context.getClimates().put(r, newClimates.get(r));
+            context.getClimates().put(r.getId(), newClimates.get(r));
         }
     }
 
@@ -115,7 +115,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
         float res = 0;
         float myTemperature = oldClimate.getTemperature();
         for(RoomLink neighborLink : context.getRoomMap().getNeighbors(r)) {
-            float neighborTemperature = context.getClimates().get(neighborLink.getNeighbor()).getTemperature();
+            float neighborTemperature = context.getClimates().get(neighborLink.getNeighbor().getId()).getTemperature();
             float deltaT = neighborTemperature - myTemperature;
             float QPerSecondNeighbor = neighborLink.getWall().getArea()
                     *neighborLink.getWall().getHeatTransferCoefficient()

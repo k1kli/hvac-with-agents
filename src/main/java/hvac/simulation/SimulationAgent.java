@@ -1,6 +1,8 @@
 package hvac.simulation;
 
 import hvac.database.Connection;
+import hvac.ontologies.roomclimate.RoomClimateOntology;
+import hvac.simulation.behaviours.ClimateInformingBehaviour;
 import hvac.simulation.behaviours.ClimateUpdatingBehaviour;
 import hvac.simulation.machinery.AirConditioner;
 import hvac.simulation.machinery.Heater;
@@ -10,8 +12,9 @@ import hvac.simulation.rooms.RoomClimate;
 import hvac.simulation.rooms.RoomWall;
 import hvac.time.DateTimeSimulator;
 import hvac.weather.DatabaseForecastProvider;
+import jade.content.lang.sl.SLCodec;
 import jade.core.Agent;
-import jade.core.behaviours.TickerBehaviour;
+import jade.domain.FIPANames;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,6 +43,9 @@ public class SimulationAgent extends Agent {
             return;
         }
         DateTimeSimulator.init(startTime, timeScale);
+        getContentManager().registerLanguage(new SLCodec(),
+                FIPANames.ContentLanguage.FIPA_SL0);
+        getContentManager().registerOntology(RoomClimateOntology.getInstance());
         connection = new Connection();
         loadMap();
         setDefaultClimate();
@@ -47,23 +53,7 @@ public class SimulationAgent extends Agent {
                 this, 1000, simulationContext, timeScale,
                 new DatabaseForecastProvider(connection)));
         Room r = simulationContext.getRoomMap().getRooms().iterator().next();
-        addBehaviour(new TickerBehaviour(this, 1010) {
-            @Override
-            protected void onTick() {
-                System.out.println("Room 1 currently has:");
-                RoomClimate climate = simulationContext.getClimates().get(r);
-                float temp = climate.getTemperature() - 273f;
-                float otemp = simulationContext.getOutsideClimate().getTemperature() - 273f;
-                float rh = climate.getRelativeHumidity();
-                float ah = climate.getAbsoluteHumidity();
-                float pr = simulationContext.getOutsideClimate().getPressure();
-                float airQuality = climate.getAirQuality() * 100f;
-                System.out.println("Now is " + DateTimeSimulator.getCurrentDate());
-                System.out.println("Temperature " + temp + "(" + otemp + ") degrees C");
-                System.out.println("Relative humidity " + rh + "% ah=" + ah + ", pressure=" + pr);
-                System.out.println("Air quality " + airQuality + "%");
-            }
-        });
+        addBehaviour(new ClimateInformingBehaviour(this, simulationContext));
     }
 
     private void usage(String err) {
@@ -75,10 +65,10 @@ public class SimulationAgent extends Agent {
     }
 
     private void loadMap() {
-        Room r1 = new Room(200, 50);
-        Room r2 = new Room(250, 70);
-        Room r3 = new Room(150, 35);
-        Room r4 = new Room(300, 80);
+        Room r1 = new Room(1,200, 50);
+        Room r2 = new Room(2,250, 70);
+        Room r3 = new Room(3,150, 35);
+        Room r4 = new Room(4,300, 80);
         RoomWall r12 = new RoomWall(24, 0.4f);
         RoomWall r23 = new RoomWall(16, 0.2f);
         RoomWall r34 = new RoomWall(18, 0.5f);
@@ -104,7 +94,7 @@ public class SimulationAgent extends Agent {
             climate.setPeopleInRoom(0);
             if(i++ == 0) climate.setTemperature(273f+15f);
             else climate.setTemperature(273f+20f);
-            simulationContext.getClimates().put(r, climate);
+            simulationContext.getClimates().put(r.getId(), climate);
         }
     }
 

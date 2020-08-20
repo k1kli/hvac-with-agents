@@ -4,7 +4,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 public class RoomMap {
-    private Hashtable<Room, LinkedList<RoomLink>> roomGraph
+    private final Hashtable<Room, LinkedList<RoomLink>> roomGraph
             = new Hashtable<>();
 
     public void addRoom(Room room) {

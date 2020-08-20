@@ -6,9 +6,9 @@ import hvac.simulation.machinery.Ventilator;
 
 public class RoomClimate {
     private float temperature;//in kelvins
-    private Heater heater;
-    private AirConditioner airConditioner;
-    private Ventilator ventilator;
+    private final Heater heater;
+    private final AirConditioner airConditioner;
+    private final Ventilator ventilator;
     private float absoluteHumidity;//in kg/m^3
     private float relativeHumidity;//ratio (no unit)
     private int peopleInRoom = 0;

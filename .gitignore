@@ -84,3 +84,5 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 APDescription.txt
 MTPs-Main-Container.txt
+/src/main/resources/credentials.json
+/tokens/StoredCredential

@@ -31,6 +31,13 @@ You can change used database in src/main/resources/META-INF/persistence.xml file
 To fill database with weather data run with starting class hvac.weather.parsing.WeatherSaver
 This will also delete previous weather data.
 
+### Google Calendar
+To use this project you need to register it with google calendar.
+To do it place provided StoredCredential file in the same location as StoredCredential.hehe file
+or generate credentials for your google account [here](https://developers.google.com/calendar/quickstart/java)
+(click Enable the google calendar API button) and place generated file in the same location as
+credentials.json.here file. As StoredCredentials and credentials.json files contain sensitive data
+ they are excluded from the repository.
 ### Weather data
 Data provided by [meteostat](https://www.meteostat.net).
 Meteorological data: Copyright &copy; National Oceanic and Atmospheric Administration (NOAA),

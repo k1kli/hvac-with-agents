@@ -24,7 +24,7 @@ public class RoomClimateOntology extends Ontology {
 
     public static Ontology getInstance() {return theInstance;}
 
-    public RoomClimateOntology() {
+    private RoomClimateOntology() {
         super(ONTOLOGY_NAME, BasicOntology.getInstance());
         try {
             PredicateSchema ps = new PredicateSchema(ROOM_CLIMATE);

@@ -73,6 +73,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         reply.setPerformative(ACLMessage.INFORM);
         int roomId = reportMachineryStatus.getRoomId();
         RoomClimate climate = context.getClimates().get(roomId);
+        if(climate == null) { replyRefuse(msg); return; }
         Machinery machinery = new Machinery(
                 new AirConditioner(
                         Conversions.toOntologyParameter(climate.getAirConditioner().getExchangedAirVolumePerSecond()),
@@ -104,6 +105,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         int roomId = updateMachinery.getRoomId();
         Machinery machinery = updateMachinery.getMachinery();
         RoomClimate climate = context.getClimates().get(roomId);
+        if(climate == null) { replyRefuse(msg); return; }
         List<ParameterUpdate> parameterUpdates = getRequestedParameterUpdates(machinery, climate);
         boolean allValid = parameterUpdates.stream().allMatch(parameterUpdate ->
                 parameterUpdate.newValue >= 0 && parameterUpdate.newValue <= parameterUpdate.parameterToUpdate.getMaxValue());

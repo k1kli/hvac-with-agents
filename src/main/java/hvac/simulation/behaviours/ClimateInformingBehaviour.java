@@ -64,11 +64,19 @@ public class ClimateInformingBehaviour extends CyclicBehaviour {
                     reply.setPerformative(ACLMessage.INFORM);
                     myAgent.getContentManager().fillContent(reply, roomClimate);
                     myAgent.send(reply);
-                    return;
+                } else {
+                    replyRefuse(msg);
                 }
+                return;
             }
         }
         replyNotUnderstood(msg);
+    }
+
+    private void replyRefuse(ACLMessage msg) {
+        ACLMessage reply = msg.createReply();
+        reply.setPerformative(ACLMessage.REFUSE);
+        myAgent.send(reply);
     }
 
     private void replyNotUnderstood(ACLMessage msg) {

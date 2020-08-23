@@ -107,10 +107,12 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         List<ParameterUpdate> parameterUpdates = getRequestedParameterUpdates(machinery, climate);
         boolean allValid = parameterUpdates.stream().allMatch(parameterUpdate ->
                 parameterUpdate.newValue >= 0 && parameterUpdate.newValue <= parameterUpdate.parameterToUpdate.getMaxValue());
-        if (allValid)
+        if (allValid) {
             parameterUpdates.forEach(
                     parameterUpdate -> parameterUpdate.parameterToUpdate.setCurrentValue(parameterUpdate.newValue)
             );
+            replyAgree(msg);
+        }
         else
             replyRefuse(msg);
     }
@@ -163,6 +165,12 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
     private void replyRefuse(ACLMessage msg) {
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.REFUSE);
+        myAgent.send(reply);
+    }
+
+    private void replyAgree(ACLMessage msg) {
+        ACLMessage reply = msg.createReply();
+        reply.setPerformative(ACLMessage.AGREE);
         myAgent.send(reply);
     }
 }

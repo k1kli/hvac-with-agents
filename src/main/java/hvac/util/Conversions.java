@@ -1,5 +1,6 @@
 package hvac.util;
 
+import hvac.ontologies.machinery.MachineParameter;
 import hvac.ontologies.weather.WeatherSnapshot;
 import hvac.simulation.rooms.RoomClimate;
 
@@ -32,5 +33,9 @@ public class Conversions {
                 roomClimate.getAbsoluteHumidity(),
                 roomClimate.getRelativeHumidity(),
                 roomClimate.getAirQuality());
+    }
+
+    public static hvac.ontologies.machinery.MachineParameter toOntologyParameter(hvac.simulation.machinery.MachineParameter parameter) {
+        return new MachineParameter(parameter.getCurrentValue(), parameter.getMaxValue());
     }
 }

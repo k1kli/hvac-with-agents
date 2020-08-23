@@ -3,6 +3,7 @@ package hvac.simulation.behaviours;
 import hvac.ontologies.machinery.*;
 import hvac.simulation.SimulationContext;
 import hvac.simulation.rooms.RoomClimate;
+import hvac.util.Conversions;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
@@ -17,7 +18,6 @@ import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public class MachineryInterfaceBehaviour extends CyclicBehaviour {
 
@@ -75,14 +75,14 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         RoomClimate climate = context.getClimates().get(roomId);
         Machinery machinery = new Machinery(
                 new AirConditioner(
-                        new MachineParameter(climate.getAirConditioner().getExchangedAirVolumePerSecond(), 100.0f),
-                        new MachineParameter(climate.getAirConditioner().getCoolingPower(), 10.0f)
+                        Conversions.toOntologyParameter(climate.getAirConditioner().getExchangedAirVolumePerSecond()),
+                        Conversions.toOntologyParameter(climate.getAirConditioner().getCoolingPower())
                 ),
                 new Heater(
-                        new MachineParameter(climate.getHeater().getHeatingPower(), 10.0f)
+                        Conversions.toOntologyParameter(climate.getHeater().getHeatingPower())
                 ),
                 new Ventilator(
-                        new MachineParameter(climate.getVentilator().getExchangedAirVolumePerSecond(), 100.0f)
+                        Conversions.toOntologyParameter(climate.getVentilator().getExchangedAirVolumePerSecond())
                 )
         );
         MachineryStatus status = new MachineryStatus(machinery, roomId);
@@ -92,13 +92,11 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
 
     private static class ParameterUpdate {
         public float newValue;
-        public Consumer<Float> setter;
-        public float maxValue;
+        public hvac.simulation.machinery.MachineParameter parameterToUpdate;
 
-        public ParameterUpdate(float newValue, Consumer<Float> setter, float maxValue) {
+        public ParameterUpdate(float newValue, hvac.simulation.machinery.MachineParameter parameterToUpdate) {
             this.newValue = newValue;
-            this.setter = setter;
-            this.maxValue = maxValue;
+            this.parameterToUpdate = parameterToUpdate;
         }
     }
 
@@ -108,10 +106,10 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         RoomClimate climate = context.getClimates().get(roomId);
         List<ParameterUpdate> parameterUpdates = getRequestedParameterUpdates(machinery, climate);
         boolean allValid = parameterUpdates.stream().allMatch(parameterUpdate ->
-                parameterUpdate.newValue >= 0 && parameterUpdate.newValue <= parameterUpdate.maxValue);
+                parameterUpdate.newValue >= 0 && parameterUpdate.newValue <= parameterUpdate.parameterToUpdate.getMaxValue());
         if (allValid)
             parameterUpdates.forEach(
-                    parameterUpdate -> parameterUpdate.setter.accept(parameterUpdate.newValue)
+                    parameterUpdate -> parameterUpdate.parameterToUpdate.setCurrentValue(parameterUpdate.newValue)
             );
         else
             replyRefuse(msg);
@@ -125,8 +123,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
                             parameterUpdates.add(
                                     new ParameterUpdate(
                                             aeps.getCurrentValue(),
-                                            climate.getAirConditioner()::setExchangedAirVolumePerSecond,
-                                            100.0f)
+                                            climate.getAirConditioner().getExchangedAirVolumePerSecond())
                             )
                     );
             Optional.ofNullable(airConditioner.getCoolingPower())
@@ -134,8 +131,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
                             parameterUpdates.add(
                                     new ParameterUpdate(
                                             cp.getCurrentValue(),
-                                            climate.getAirConditioner()::setCoolingPower,
-                                            10.0f)
+                                            climate.getAirConditioner().getCoolingPower())
                             )
                     );
         });
@@ -144,8 +140,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
                 .ifPresent(hp -> parameterUpdates.add(
                         new ParameterUpdate(
                                 hp.getCurrentValue(),
-                                climate.getHeater()::setHeatingPower,
-                                10.0f
+                                climate.getHeater().getHeatingPower()
                         )
                 ));
         Optional.ofNullable(machinery.getVentilator())
@@ -153,8 +148,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
                 .ifPresent(aeps -> parameterUpdates.add(
                         new ParameterUpdate(
                                 aeps.getCurrentValue(),
-                                climate.getVentilator()::setExchangedAirVolumePerSecond,
-                                100.0f
+                                climate.getVentilator().getExchangedAirVolumePerSecond()
                         )
                 ));
         return parameterUpdates;

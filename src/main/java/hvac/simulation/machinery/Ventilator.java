@@ -2,17 +2,13 @@ package hvac.simulation.machinery;
 
 public class Ventilator {
     //TODO: calculate energy used
-    private float exchangedAirVolumePerSecond;//in m^3/s
+    private final MachineParameter exchangedAirVolumePerSecond;//in m^3/s
 
-    public Ventilator(float exchangedAirVolumePerSecond) {
+    public Ventilator(MachineParameter exchangedAirVolumePerSecond) {
         this.exchangedAirVolumePerSecond = exchangedAirVolumePerSecond;
     }
 
-    public float getExchangedAirVolumePerSecond() {
+    public MachineParameter getExchangedAirVolumePerSecond() {
         return exchangedAirVolumePerSecond;
-    }
-
-    public void setExchangedAirVolumePerSecond(float exchangedAirVolumePerSecond) {
-        this.exchangedAirVolumePerSecond = exchangedAirVolumePerSecond;
     }
 }

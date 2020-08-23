@@ -8,6 +8,7 @@ import hvac.simulation.behaviours.ClimateUpdatingBehaviour;
 import hvac.simulation.behaviours.MachineryInterfaceBehaviour;
 import hvac.simulation.machinery.AirConditioner;
 import hvac.simulation.machinery.Heater;
+import hvac.simulation.machinery.MachineParameter;
 import hvac.simulation.machinery.Ventilator;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomClimate;
@@ -91,9 +92,13 @@ public class SimulationAgent extends Agent {
         int i = 0;
         for(Room r : simulationContext.getRoomMap().getRooms()) {
             RoomClimate climate = new RoomClimate(
-                    new Heater(0f),
-                    new AirConditioner(0f, 0f, 0.5f),
-                    new Ventilator(0.02f));//20L/s == 0.02m^3/s
+                    new Heater(new MachineParameter(0f, 10000.0f)),
+                    new AirConditioner(
+                            new MachineParameter(0f, 10000.0f),
+                            new MachineParameter(0f, 0.5f),
+                            0.5f),
+                    new Ventilator(new MachineParameter(0.02f, 0.5f))//20L/s == 0.02m^3/s
+            );
             climate.setAbsoluteHumidity(0.001f);
             climate.setPeopleInRoom(0);
             if(i++ == 0) climate.setTemperature(273f+15f);

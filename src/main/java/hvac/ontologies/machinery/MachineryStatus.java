@@ -4,9 +4,11 @@ import jade.content.Predicate;
 
 public class MachineryStatus implements Predicate {
     private Machinery machinery;
+    private int roomId;
 
-    public MachineryStatus(Machinery machinery) {
+    public MachineryStatus(Machinery machinery, int roomId) {
         this.machinery = machinery;
+        this.roomId = roomId;
     }
 
     public MachineryStatus() {
@@ -18,5 +20,13 @@ public class MachineryStatus implements Predicate {
 
     public void setMachinery(Machinery machinery) {
         this.machinery = machinery;
+    }
+
+    public int getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(int roomId) {
+        this.roomId = roomId;
     }
 }

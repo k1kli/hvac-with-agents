@@ -1,9 +1,11 @@
 package hvac.simulation;
 
 import hvac.database.Connection;
+import hvac.ontologies.machinery.MachineryOntology;
 import hvac.ontologies.roomclimate.RoomClimateOntology;
 import hvac.simulation.behaviours.ClimateInformingBehaviour;
 import hvac.simulation.behaviours.ClimateUpdatingBehaviour;
+import hvac.simulation.behaviours.MachineryInterfaceBehaviour;
 import hvac.simulation.machinery.AirConditioner;
 import hvac.simulation.machinery.Heater;
 import hvac.simulation.machinery.Ventilator;
@@ -46,6 +48,7 @@ public class SimulationAgent extends Agent {
         getContentManager().registerLanguage(new SLCodec(),
                 FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(RoomClimateOntology.getInstance());
+        getContentManager().registerOntology(MachineryOntology.getInstance());
         connection = new Connection();
         loadMap();
         setDefaultClimate();
@@ -54,6 +57,7 @@ public class SimulationAgent extends Agent {
                 new DatabaseForecastProvider(connection)));
         Room r = simulationContext.getRoomMap().getRooms().iterator().next();
         addBehaviour(new ClimateInformingBehaviour(this, simulationContext));
+        addBehaviour(new MachineryInterfaceBehaviour(this, simulationContext));
     }
 
     private void usage(String err) {

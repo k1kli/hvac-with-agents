@@ -4,9 +4,9 @@ import jade.content.Concept;
 
 public class MachineParameter implements Concept {
     private float currentValue;
-    private float maxValue;
+    private Float maxValue;
 
-    public MachineParameter(float currentValue, float maxValue) {
+    public MachineParameter(float currentValue, Float maxValue) {
         this.currentValue = currentValue;
         this.maxValue = maxValue;
     }
@@ -21,11 +21,11 @@ public class MachineParameter implements Concept {
         this.currentValue = currentValue;
     }
 
-    public float getMaxValue() {
+    public Float getMaxValue() {
         return maxValue;
     }
 
-    public void setMaxValue(float maxValue) {
+    public void setMaxValue(Float maxValue) {
         this.maxValue = maxValue;
     }
 }

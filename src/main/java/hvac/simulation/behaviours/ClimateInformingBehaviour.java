@@ -21,11 +21,8 @@ import java.util.Hashtable;
 public class ClimateInformingBehaviour extends CyclicBehaviour {
     private final SimulationContext context;
     private final MessageTemplate messageTemplate = MessageTemplate.and(
-            MessageTemplate.MatchOntology(RoomClimateOntology.getInstance().getName()),
-            MessageTemplate.and(
                     MessageTemplate.MatchLanguage(FIPANames.ContentLanguage.FIPA_SL0),
-                    MessageTemplate.MatchPerformative(ACLMessage.REQUEST)
-            )
+                    MessageTemplate.MatchOntology(RoomClimateOntology.getInstance().getName())
     );
 
     public ClimateInformingBehaviour(Agent a, SimulationContext context) {
@@ -37,9 +34,13 @@ public class ClimateInformingBehaviour extends CyclicBehaviour {
     public void action() {
         ACLMessage msg = myAgent.receive(messageTemplate);
         if(msg != null) {
-            try {
-                processRequest(msg);
-            } catch (Codec.CodecException | OntologyException e) {
+            if(msg.getPerformative() == ACLMessage.REQUEST) {
+                try {
+                    processRequest(msg);
+                } catch (Codec.CodecException | OntologyException e) {
+                    replyNotUnderstood(msg);
+                }
+            } else {
                 replyNotUnderstood(msg);
             }
         } else {

@@ -15,9 +15,9 @@ import java.util.Comparator;
 import java.util.Hashtable;
 
 public class ClimateUpdatingBehaviour extends TickerBehaviour {
-    private SimulationContext context;
-    private float timeScale;
-    private ForecastProvider forecastProvider;
+    private final SimulationContext context;
+    private final float timeScale;
+    private final ForecastProvider forecastProvider;
     private WeatherSnapshot[] cachedSnapshots;
 
     public ClimateUpdatingBehaviour(Agent agent,
@@ -34,7 +34,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
         updateOutsideClimate();
         Hashtable<Room, RoomClimate> newClimates = new Hashtable<>();
         for(Room r : context.getRoomMap().getRooms()) {
-            RoomClimate oldClimate = context.getClimates().get(r);
+            RoomClimate oldClimate = context.getClimates().get(r.getId());
             RoomClimate newClimate = new RoomClimate(
                     oldClimate.getHeater(),
                     oldClimate.getAirConditioner(),
@@ -48,7 +48,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
             newClimates.put(r, newClimate);
         }
         for(Room r : context.getRoomMap().getRooms()) {
-            context.getClimates().put(r, newClimates.get(r));
+            context.getClimates().put(r.getId(), newClimates.get(r));
         }
     }
 
@@ -106,8 +106,8 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
     }
 
     private float calculateHeatingACHeatTransferFor(RoomClimate oldClimate) {
-        float heatingPower = oldClimate.getHeater().getHeatingPower();
-        float coolingPower = oldClimate.getAirConditioner().getCoolingPower();
+        float heatingPower = oldClimate.getHeater().getHeatingPower().getCurrentValue();
+        float coolingPower = oldClimate.getAirConditioner().getCoolingPower().getCurrentValue();
         return (heatingPower - coolingPower)*getDeltaTime();
     }
 
@@ -115,7 +115,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
         float res = 0;
         float myTemperature = oldClimate.getTemperature();
         for(RoomLink neighborLink : context.getRoomMap().getNeighbors(r)) {
-            float neighborTemperature = context.getClimates().get(neighborLink.getNeighbor()).getTemperature();
+            float neighborTemperature = context.getClimates().get(neighborLink.getNeighbor().getId()).getTemperature();
             float deltaT = neighborTemperature - myTemperature;
             float QPerSecondNeighbor = neighborLink.getWall().getArea()
                     *neighborLink.getWall().getHeatTransferCoefficient()
@@ -126,7 +126,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
     }
 
     private float calculateTemperatureWithVentilationFor(Room r, RoomClimate oldClimate, float beforeVentilationTemp) {
-        float airExchangedPerSecond = oldClimate.getVentilator().getExchangedAirVolumePerSecond();
+        float airExchangedPerSecond = oldClimate.getVentilator().getExchangedAirVolumePerSecond().getCurrentValue();
         float airExchanged = Math.min(airExchangedPerSecond*getDeltaTime(), r.getVolume());
         float outsideTemperature = context.getOutsideClimate().getTemperature();
         return (beforeVentilationTemp * (r.getVolume() - airExchanged)
@@ -140,7 +140,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
 
 
     private float calculateHumidityWithACFor(Room r, RoomClimate oldClimate) {
-        float airExchangedPerSecond = oldClimate.getAirConditioner().getExchangedAirVolumePerSecond();
+        float airExchangedPerSecond = oldClimate.getAirConditioner().getExchangedAirVolumePerSecond().getCurrentValue();
         float waterRemoved = oldClimate.getAirConditioner().getWaterRemoved();
         float airExchanged = Math.min(airExchangedPerSecond*getDeltaTime(), r.getVolume());
         float oldHumidity = oldClimate.getAbsoluteHumidity();
@@ -148,7 +148,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
     }
 
     private float calculateHumidityWithVentilationFor(Room r, RoomClimate oldClimate, float humidityWithAC) {
-        float airExchangedPerSecond = oldClimate.getVentilator().getExchangedAirVolumePerSecond();
+        float airExchangedPerSecond = oldClimate.getVentilator().getExchangedAirVolumePerSecond().getCurrentValue();
         float outsideHumidity = context.getOutsideClimate().getAbsoluteHumidity();
         float airExchanged = Math.min(airExchangedPerSecond*getDeltaTime(), r.getVolume());
         return (humidityWithAC * (r.getVolume() - airExchanged) + outsideHumidity * airExchanged)
@@ -173,7 +173,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
         float roomArea = r.getArea();
         float optimalVentilation = 2.5f * peopleInRoom + 0.3f * roomArea;
         optimalVentilation /= 1000f; //conversion to m^3/s from L/s
-        float actualVentilation = oldClimate.getVentilator().getExchangedAirVolumePerSecond();
+        float actualVentilation = oldClimate.getVentilator().getExchangedAirVolumePerSecond().getCurrentValue();
         return Math.min(1f, actualVentilation / optimalVentilation);
     }
 

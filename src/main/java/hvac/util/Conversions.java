@@ -1,6 +1,8 @@
 package hvac.util;
 
+import hvac.ontologies.machinery.MachineParameter;
 import hvac.ontologies.weather.WeatherSnapshot;
+import hvac.simulation.rooms.RoomClimate;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -22,5 +24,18 @@ public class Conversions {
                 weatherSnapshot.getTemperature(),
                 weatherSnapshot.getPressure(),
                 weatherSnapshot.getAbsoluteHumidity());
+    }
+
+    public static hvac.ontologies.roomclimate.RoomClimate toOntologyRoomClimate(int roomId, RoomClimate roomClimate) {
+        return new hvac.ontologies.roomclimate.RoomClimate(
+                roomId,
+                roomClimate.getTemperature(),
+                roomClimate.getAbsoluteHumidity(),
+                roomClimate.getRelativeHumidity(),
+                roomClimate.getAirQuality());
+    }
+
+    public static hvac.ontologies.machinery.MachineParameter toOntologyParameter(hvac.simulation.machinery.MachineParameter parameter) {
+        return new MachineParameter(parameter.getCurrentValue(), parameter.getMaxValue());
     }
 }

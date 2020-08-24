@@ -2,17 +2,13 @@ package hvac.simulation.machinery;
 
 public class Heater {
     //TODO: calculate energy used
-    private float heatingPower;// in watts
+    private final MachineParameter heatingPower;// in watts
 
-    public Heater(float heatingPower) {
+    public Heater(MachineParameter heatingPower) {
         this.heatingPower = heatingPower;
     }
 
-    public float getHeatingPower() {
+    public MachineParameter getHeatingPower() {
         return heatingPower;
-    }
-
-    public void setHeatingPower(float heatingPower) {
-        this.heatingPower = heatingPower;
     }
 }

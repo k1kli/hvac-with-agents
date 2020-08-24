@@ -1,9 +1,9 @@
 package hvac.roomcoordinator;
 
-import hvac.meetingontology.Meeting;
-import hvac.meetingontology.MeetingOntology;
-import hvac.meetingontology.Request;
-import hvac.meetingontology.RequestStatus;
+import hvac.ontologies.meeting.Meeting;
+import hvac.ontologies.meeting.MeetingOntology;
+import hvac.ontologies.meeting.Request;
+import hvac.ontologies.meeting.RequestStatus;
 import hvac.simulation.rooms.RoomWall;
 import jade.content.lang.Codec;
 import jade.content.lang.sl.SLCodec;

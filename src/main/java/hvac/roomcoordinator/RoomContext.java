@@ -1,6 +1,6 @@
 package hvac.roomcoordinator;
 
-import hvac.meetingontology.Meeting;
+import hvac.ontologies.meeting.Meeting;
 import hvac.simulation.rooms.RoomWall;
 import jade.core.AID;
 

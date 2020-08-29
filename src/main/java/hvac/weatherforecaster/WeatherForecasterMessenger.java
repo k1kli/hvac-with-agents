@@ -3,6 +3,7 @@ package hvac.weatherforecaster;
 import hvac.ontologies.weather.Forecast;
 import hvac.ontologies.weather.ForecastRequest;
 import hvac.ontologies.weather.WeatherOntology;
+import hvac.util.Conversions;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.onto.OntologyException;
@@ -12,6 +13,7 @@ import jade.core.Agent;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -21,20 +23,24 @@ public class WeatherForecasterMessenger {
     /**
      * prepares message that when sent to Weather forecaster will result in correct snapshot
      * Requires that agent has registered sl0 language and weather ontology
-     * @param request request to send to forecaster
+     * @param from oldest date that provided forecast can have
+     * @param to newest date that provided forecasts can have
      * @param myAgent agent that will send the message
      * @param forecaster forecaster to which message will be sent
      * @return prepared message
      * @throws Codec.CodecException
      * @throws OntologyException
      */
-    public static ACLMessage prepareForecastRequest(ForecastRequest request, Agent myAgent, AID forecaster)
+    public static ACLMessage prepareForecastRequest(LocalDateTime from, LocalDateTime to, Agent myAgent, AID forecaster)
             throws Codec.CodecException, OntologyException {
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
         msg.addReceiver(forecaster);
         msg.setLanguage(FIPANames.ContentLanguage.FIPA_SL0);
         msg.setOntology(WeatherOntology.getInstance().getName());
-        Action action = new Action(forecaster, request);
+        Action action = new Action(forecaster, new ForecastRequest(
+                Conversions.toDate(from),
+                Conversions.toDate(to)
+        ));
         myAgent.getContentManager().fillContent(msg, action);
         return msg;
     }

@@ -1,12 +1,9 @@
 package hvac.simulation;
 
-import hvac.ontologies.machinery.Machinery;
-import hvac.ontologies.machinery.MachineryOntology;
-import hvac.ontologies.machinery.ReportMachineryStatus;
-import hvac.ontologies.machinery.UpdateMachinery;
+import hvac.ontologies.machinery.*;
 import hvac.ontologies.roomclimate.InfoRequest;
 import hvac.ontologies.roomclimate.RoomClimate;
-import hvac.ontologies.weather.WeatherOntology;
+import hvac.ontologies.roomclimate.RoomClimateOntology;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.onto.Ontology;
@@ -32,12 +29,12 @@ public class SimulationAgentMessenger {
      * @param simulationAgent simulation agent to which message will be sent
      * @return prepared message
      * @throws Codec.CodecException language fipa-sl0 is not registered
-     * @throws OntologyException weather ontology is not registered
+     * @throws OntologyException room climate ontology is not registered
      */
     public static ACLMessage prepareInfoRequest(int roomId, Agent myAgent, AID simulationAgent)
             throws Codec.CodecException, OntologyException {
         InfoRequest request = new InfoRequest(roomId);
-        return createActionMessage(myAgent, simulationAgent, request, WeatherOntology.getInstance());
+        return createActionMessage(myAgent, simulationAgent, request, RoomClimateOntology.getInstance());
     }
 
 
@@ -48,7 +45,7 @@ public class SimulationAgentMessenger {
      * @param msg message with room climate
      * @return extracted room climate if message contains one
      * @throws Codec.CodecException language fipa-sl0 is not registered or message received is not in this language
-     * @throws OntologyException weather ontology is not registered or message received is not in this ontology
+     * @throws OntologyException room climate ontology is not registered or message received is not in this ontology
      */
     public static Optional<RoomClimate> extractRoomClimate(Agent myAgent, ACLMessage msg)
             throws Codec.CodecException, OntologyException {
@@ -67,7 +64,7 @@ public class SimulationAgentMessenger {
      * @param simulationAgent simulation agent to which message will be sent
      * @return prepared message
      * @throws Codec.CodecException language fipa-sl0 is not registered
-     * @throws OntologyException weather ontology is not registered
+     * @throws OntologyException machinery ontology is not registered
      */
     public static ACLMessage prepareReportMachineryStatus(int roomId, Agent myAgent, AID simulationAgent)
             throws Codec.CodecException, OntologyException {
@@ -83,13 +80,13 @@ public class SimulationAgentMessenger {
      * @param msg message with room climate
      * @return extracted machinery status if message contains one
      * @throws Codec.CodecException language fipa-sl0 is not registered or message received is not in this language
-     * @throws OntologyException weather ontology is not registered or message received is not in this ontology
+     * @throws OntologyException machinery ontology is not registered or message received is not in this ontology
      */
-    public static Optional<RoomClimate> extractMachineryStatus(Agent myAgent, ACLMessage msg)
+    public static Optional<MachineryStatus> extractMachineryStatus(Agent myAgent, ACLMessage msg)
             throws Codec.CodecException, OntologyException {
         ContentElement content = myAgent.getContentManager().extractContent(msg);
-        if(content instanceof RoomClimate) {
-            return Optional.of((RoomClimate)content);
+        if(content instanceof MachineryStatus) {
+            return Optional.of((MachineryStatus)content);
         }
         return Optional.empty();
     }
@@ -102,7 +99,7 @@ public class SimulationAgentMessenger {
      * @param simulationAgent simulation agent to which message will be sent
      * @return prepared message
      * @throws Codec.CodecException language fipa-sl0 is not registered
-     * @throws OntologyException weather ontology is not registered
+     * @throws OntologyException machinery ontology is not registered
      */
     public static ACLMessage prepareUpdateMachinery(Machinery machinery, int roomId, Agent myAgent, AID simulationAgent)
             throws Codec.CodecException, OntologyException {

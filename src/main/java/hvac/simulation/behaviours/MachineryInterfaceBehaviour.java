@@ -18,6 +18,7 @@ import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 public class MachineryInterfaceBehaviour extends CyclicBehaviour {
 
@@ -88,6 +89,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         );
         MachineryStatus status = new MachineryStatus(machinery, roomId);
         myAgent.getContentManager().fillContent(reply, status);
+        context.getLogger().log("replying to report machinery request: roomId: " + roomId);
         myAgent.send(reply);
     }
 
@@ -106,6 +108,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         Machinery machinery = updateMachinery.getMachinery();
         RoomClimate climate = context.getClimates().get(roomId);
         if(climate == null) { replyRefuse(msg); return; }
+        context.getLogger().log("requested parameter updates for roomId="+roomId);
         List<ParameterUpdate> parameterUpdates = getRequestedParameterUpdates(machinery, climate);
         boolean allValid = parameterUpdates.stream().allMatch(parameterUpdate ->
                 parameterUpdate.newValue >= 0 && parameterUpdate.newValue <= parameterUpdate.parameterToUpdate.getMaxValue());
@@ -120,57 +123,72 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
     }
 
     private List<ParameterUpdate> getRequestedParameterUpdates(Machinery machinery, RoomClimate climate) {
+        StringJoiner joiner = new StringJoiner(",");
         List<ParameterUpdate> parameterUpdates = new ArrayList<>();
         Optional.ofNullable(machinery.getAirConditioner()).ifPresent(airConditioner -> {
             Optional.ofNullable(airConditioner.getAirExchangedPerSecond())
-                    .ifPresent(aeps ->
-                            parameterUpdates.add(
-                                    new ParameterUpdate(
-                                            aeps.getCurrentValue(),
-                                            climate.getAirConditioner().getExchangedAirVolumePerSecond())
-                            )
+                    .ifPresent(aeps -> {
+                        parameterUpdates.add(
+                                new ParameterUpdate(
+                                        aeps.getCurrentValue(),
+                                        climate.getAirConditioner().getExchangedAirVolumePerSecond())
+                        );
+                        joiner.add("ac-aeps="+aeps.getCurrentValue());
+                            }
                     );
             Optional.ofNullable(airConditioner.getCoolingPower())
-                    .ifPresent(cp ->
-                            parameterUpdates.add(
-                                    new ParameterUpdate(
-                                            cp.getCurrentValue(),
-                                            climate.getAirConditioner().getCoolingPower())
-                            )
+                    .ifPresent(cp -> {
+                                parameterUpdates.add(
+                                        new ParameterUpdate(
+                                                cp.getCurrentValue(),
+                                                climate.getAirConditioner().getCoolingPower())
+                                );
+                        joiner.add("ac-cp="+cp.getCurrentValue());
+                            }
                     );
         });
         Optional.ofNullable(machinery.getHeater())
                 .flatMap(heater -> Optional.of(heater.getHeatingPower()))
-                .ifPresent(hp -> parameterUpdates.add(
-                        new ParameterUpdate(
-                                hp.getCurrentValue(),
-                                climate.getHeater().getHeatingPower()
-                        )
-                ));
+                .ifPresent(hp -> {
+                    parameterUpdates.add(
+                            new ParameterUpdate(
+                                    hp.getCurrentValue(),
+                                    climate.getHeater().getHeatingPower()
+                            )
+                    );
+                    joiner.add("heater-hp="+hp.getCurrentValue());
+                });
         Optional.ofNullable(machinery.getVentilator())
                 .flatMap(ventilator -> Optional.of(ventilator.getAirExchangedPerSecond()))
-                .ifPresent(aeps -> parameterUpdates.add(
-                        new ParameterUpdate(
-                                aeps.getCurrentValue(),
-                                climate.getVentilator().getExchangedAirVolumePerSecond()
-                        )
-                ));
+                .ifPresent(aeps -> {
+                    parameterUpdates.add(
+                            new ParameterUpdate(
+                                    aeps.getCurrentValue(),
+                                    climate.getVentilator().getExchangedAirVolumePerSecond()
+                            )
+                    );
+                    joiner.add("ventilator-aeps="+aeps.getCurrentValue());
+                });
+        context.getLogger().log("requested parameter updates: " + joiner.toString());
         return parameterUpdates;
     }
 
     private void replyNotUnderstood(ACLMessage msg) {
+        context.getLogger().log("not understood");
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
         myAgent.send(reply);
     }
 
     private void replyRefuse(ACLMessage msg) {
+        context.getLogger().log("refuse");
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.REFUSE);
         myAgent.send(reply);
     }
 
     private void replyAgree(ACLMessage msg) {
+        context.getLogger().log("agree");
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.AGREE);
         myAgent.send(reply);

@@ -34,7 +34,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     private static final int MINUTES_BETWEEN_UPDATES = 3;
     private static final float AIR_QUALITY_TOLERANCE = 0.05f;
     private static final float POWER_TOLERANCE = 0.5f;
-    private static final float AIR_EXCHAGEND_PER_SECOND_TOLERANCE = 0.1f;
+    private static final float AIR_EXCHANGED_PER_SECOND_TOLERANCE = 0.1f;
     private LocalDateTime lastUpdate = LocalDateTime.MIN;
 
     private enum Step {
@@ -59,13 +59,25 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
 
     @Override
     public void action() {
+        //wait for other agents to initialize
         if(!started) {
             started = true;
             block(1000);
             return;
         }
+        //remove expired statuses, so only recent data is used in interpolation
         roomStatuses.removeIf(status->status.getTime()
                 .isBefore(DateTimeSimulator.getCurrentDate().minusSeconds(CLIMATE_FORGET_TIME_SECONDS)));
+        //remove statuses that have the same temperature slope as newer ones
+        //temperature slopes are x's in the interpolated function so they can't appear twice
+        roomStatuses.removeIf(status->roomStatuses.stream()
+                .anyMatch(status2->
+                        Helpers.almostEqual(
+                                status2.getTemperatureSlope(),
+                                status.getTemperatureSlope(),
+                                0.00001f) &&
+                        status2.getTime().isAfter(status.getTime())));
+        //current meeting is over - delete it
         if(context.getNextMeeting() != null && Conversions.toLocalDateTime(context.getNextMeeting().getEndDate())
                 .isBefore(DateTimeSimulator.getCurrentDate())) {
             context.setNextMeeting(null);
@@ -93,7 +105,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
             block();
             return;
         }
-        calculateNextClimate();
+        decideNextStep();
     }
 
 
@@ -109,7 +121,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
             } catch (Codec.CodecException | OntologyException e) {
                 e.printStackTrace();
             }
-            calculateNextClimate();
+            decideNextStep();
         } else {
             block();
         }
@@ -127,7 +139,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
             } catch (Codec.CodecException | OntologyException e) {
                 e.printStackTrace();
             }
-            calculateNextClimate();
+            decideNextStep();
         } else {
             block();
         }
@@ -157,7 +169,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                 if(roomStatuses.size() == 0) {
                     //get some more data required to kickstart the interpolation process
                     lastUpdate = DateTimeSimulator.getCurrentDate();
-                    calculateNextClimate();
+                    decideNextStep();
                     return;
                 } else if(roomStatuses.size() == 1) {
                     //kickstart the interpolation process
@@ -187,13 +199,13 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                 step = Step.INIT;
                 lastUpdate = DateTimeSimulator.getCurrentDate();
             }
-            calculateNextClimate();
+            decideNextStep();
         } else {
             block();
         }
     }
 
-    private void calculateNextClimate() {
+    private void decideNextStep() {
         if (context.getNextMeeting() == null) {
             step = Step.INIT;
             return;
@@ -224,7 +236,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
             enterMachineryUpdateWaitForResponseStep(machinery);
         } else {
             lastUpdate = DateTimeSimulator.getCurrentDate();
-            calculateNextClimate();
+            decideNextStep();
         }
     }
 
@@ -254,6 +266,23 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
         }
     }
 
+    private float calculateRequiredHeatingPower(float requiredTemperatureSlope) {
+        List<Float> arguments = new ArrayList<>();
+        List<Float> values = new ArrayList<>();
+        roomStatuses.stream()
+                .sorted(Comparator.comparing(RoomStatus::getTemperatureSlope))
+                .forEachOrdered(status-> {
+                    arguments.add(status.getTemperatureSlope());
+                    values.add(status.getHeatingPower());
+                });
+        float unboundRequiredHeatingPower = Interpolation.calculateValueAt(requiredTemperatureSlope,
+                arguments, values);
+        return Math.max(Math.min(unboundRequiredHeatingPower,
+                currentMachinery.getHeater().getHeatingPower().getMaxValue()),
+                -currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue());
+
+    }
+
     private AirConditioner prepareNextAirConditioner(float requiredHeatingPower) {
         if (requiredHeatingPower < -POWER_TOLERANCE) {
             return new AirConditioner(
@@ -278,19 +307,19 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
         if (!Helpers.almostEqual(
                 currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue(),
                 context.getRequiredVentilation(),
-                AIR_EXCHAGEND_PER_SECOND_TOLERANCE)) {
+                AIR_EXCHANGED_PER_SECOND_TOLERANCE)) {
             if (currentClimate.getAirQuality() < 1-AIR_QUALITY_TOLERANCE &&
                     !Helpers.almostEqual(
                             currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue(),
                             currentMachinery.getVentilator().getAirExchangedPerSecond().getMaxValue(),
-                            AIR_EXCHAGEND_PER_SECOND_TOLERANCE)) {
+                            AIR_EXCHANGED_PER_SECOND_TOLERANCE)) {
                 return new Ventilator(
                         new MachineParameter(context.getRequiredVentilation(), null));
             }
             if (currentClimate.getAirQuality() > 1+AIR_QUALITY_TOLERANCE &&
                     !Helpers.almostEqual(
                             currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue(),
-                            0, AIR_EXCHAGEND_PER_SECOND_TOLERANCE)) {
+                            0, AIR_EXCHANGED_PER_SECOND_TOLERANCE)) {
                 return new Ventilator(
                         new MachineParameter(context.getRequiredVentilation(), null));
             }
@@ -312,23 +341,6 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
             ));
         }
         return null;
-    }
-
-    private float calculateRequiredHeatingPower(float requiredTemperatureSlope) {
-        List<Float> arguments = new ArrayList<>();
-        List<Float> values = new ArrayList<>();
-        roomStatuses.stream()
-                .sorted(Comparator.comparing(RoomStatus::getTemperatureSlope))
-                .forEachOrdered(status-> {
-                    arguments.add(status.getTemperatureSlope());
-                    values.add(status.getHeatingPower());
-                });
-        float unboundRequiredHeatingPower = Interpolation.calculateValueAt(requiredTemperatureSlope,
-                arguments, values);
-        return Math.max(Math.min(unboundRequiredHeatingPower,
-                currentMachinery.getHeater().getHeatingPower().getMaxValue()),
-                -currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue());
-
     }
 
     private boolean meetingInProgress() {

@@ -1,12 +1,15 @@
 package hvac.util;
 
 import hvac.ontologies.machinery.Machinery;
+import hvac.ontologies.weather.WeatherSnapshot;
 import hvac.time.DateTimeSimulator;
 import jade.core.Agent;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -61,5 +64,39 @@ public class Helpers {
                 .ifPresent(airExchangedPerSecond ->
                         updatedMachinery.getVentilator().getAirExchangedPerSecond()
                                 .setCurrentValue(airExchangedPerSecond.getCurrentValue()));
+    }
+
+    public static WeatherSnapshot interpolateWeather(List<WeatherSnapshot> orderedWeatherSnapshots, LocalDateTime date) {
+        switch (orderedWeatherSnapshots.size()) {
+            case 0:
+                throw new IllegalArgumentException("there hast to be at least one weather snapshot");
+            case 1:
+                return orderedWeatherSnapshots.get(0);
+        }
+        if(date.isBefore(Conversions.toLocalDateTime(orderedWeatherSnapshots.get(0).getTime()))) {
+            return orderedWeatherSnapshots.get(0);
+        }
+        if(date.isAfter(Conversions.toLocalDateTime(orderedWeatherSnapshots.get(orderedWeatherSnapshots.size()-1).getTime()))
+            || date.isEqual(Conversions.toLocalDateTime(orderedWeatherSnapshots.get(orderedWeatherSnapshots.size()-1).getTime()))) {
+            return orderedWeatherSnapshots.get(orderedWeatherSnapshots.size()-1);
+        }
+        for(int i = 0; i< orderedWeatherSnapshots.size() - 1; i++) {
+            if(date.isBefore(Conversions.toLocalDateTime(orderedWeatherSnapshots.get(i+1).getTime()))) {
+                WeatherSnapshot first = orderedWeatherSnapshots.get(i);
+                WeatherSnapshot second = orderedWeatherSnapshots.get(i+1);
+                float ratio = (float)ChronoUnit.SECONDS.between(
+                        Conversions.toLocalDateTime(first.getTime()),
+                        date
+                ) / ChronoUnit.SECONDS.between(
+                        Conversions.toLocalDateTime(first.getTime()),
+                        Conversions.toLocalDateTime(second.getTime())
+                );
+                return new WeatherSnapshot(Conversions.toDate(date),
+                        first.getTemperature() * (1-ratio) + second.getTemperature() * ratio,
+                        first.getPressure() * (1-ratio) + second.getPressure() * ratio,
+                        first.getAbsoluteHumidity() * (1-ratio) + second.getAbsoluteHumidity() * ratio);
+            }
+        }
+        return orderedWeatherSnapshots.get(0);//this should be unreachable
     }
 }

@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     private final RoomUpkeeperContext context;
@@ -35,6 +36,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     private static final float AIR_QUALITY_TOLERANCE = 0.05f;
     private static final float POWER_TOLERANCE = 0.5f;
     private static final float AIR_EXCHANGED_PER_SECOND_TOLERANCE = 0.1f;
+    private static final float SLOPE_TOLERANCE = 0.000001f;
     private LocalDateTime lastUpdate = LocalDateTime.MIN;
 
     private enum Step {
@@ -60,25 +62,16 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     @Override
     public void action() {
         //wait for other agents to initialize
-        if(!started) {
+        if (!started) {
             started = true;
             block(1000);
             return;
         }
         //remove expired statuses, so only recent data is used in interpolation
-        roomStatuses.removeIf(status->status.getTime()
+        roomStatuses.removeIf(status -> status.getTime()
                 .isBefore(DateTimeSimulator.getCurrentDate().minusSeconds(CLIMATE_FORGET_TIME_SECONDS)));
-        //remove statuses that have the same temperature slope as newer ones
-        //temperature slopes are x's in the interpolated function so they can't appear twice
-        roomStatuses.removeIf(status->roomStatuses.stream()
-                .anyMatch(status2->
-                        Helpers.almostEqual(
-                                status2.getTemperatureSlope(),
-                                status.getTemperatureSlope(),
-                                0.00001f) &&
-                        status2.getTime().isAfter(status.getTime())));
         //current meeting is over - delete it
-        if(context.getNextMeeting() != null && Conversions.toLocalDateTime(context.getNextMeeting().getEndDate())
+        if (context.getNextMeeting() != null && Conversions.toLocalDateTime(context.getNextMeeting().getEndDate())
                 .isBefore(DateTimeSimulator.getCurrentDate())) {
             context.setNextMeeting(null);
         }
@@ -144,6 +137,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
             block();
         }
     }
+
     private void climateWaitForResponseStep() {
         ACLMessage msg = myAgent.receive(currentTemplate);
         if (msg != null) {
@@ -152,37 +146,54 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                 roomClimateOpt.ifPresent(climate -> {
                     LocalDateTime currentDate = DateTimeSimulator.getCurrentDate();
                     if (currentClimate != null) {
+                        long secondsSinceLastUpdate = ChronoUnit.SECONDS.between(
+                                lastUpdate,
+                                currentDate
+                        );
+                        float temperatureSlope = (climate.getTemperature() - currentClimate.getTemperature()) /
+                                secondsSinceLastUpdate;
+                        float humiditySlope = (climate.getRelativeHumidity() - currentClimate.getRelativeHumidity()) /
+                                secondsSinceLastUpdate;
+                        float heatingPower = currentMachinery.getHeater().getHeatingPower().getCurrentValue() -
+                                currentMachinery.getAirConditioner().getCoolingPower().getCurrentValue();
+                        float airExchangedPerSecond =
+                                currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue()
+                                        > context.getRequiredVentilation() ?
+                                        currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue()
+                                                - context.getRequiredVentilation() :
+                                        -(currentMachinery.getAirConditioner().getAirExchangedPerSecond().getCurrentValue()
+                                                - getAirConditioningNeededToBalanceRequiredVentilation());
                         roomStatuses.add(new RoomStatus(
-                                (climate.getTemperature() - currentClimate.getTemperature()) /
-                                        ChronoUnit.SECONDS.between(
-                                                lastUpdate,
-                                                currentDate),
-                                currentMachinery.getHeater().getHeatingPower().getCurrentValue() -
-                                        currentMachinery.getAirConditioner().getCoolingPower().getCurrentValue(),
-                                currentDate));
+                                temperatureSlope,
+                                humiditySlope, heatingPower,
+                                airExchangedPerSecond, currentDate));
                     }
                     currentClimate = climate;
                 });
                 if (!roomClimateOpt.isPresent()) {
                     throw new RuntimeException("Simulation agent returns incorrect messages");
                 }
-                if(roomStatuses.size() == 0) {
+                if (roomStatuses.size() == 0) {
                     //get some more data required to kickstart the interpolation process
                     lastUpdate = DateTimeSimulator.getCurrentDate();
                     decideNextStep();
                     return;
-                } else if(roomStatuses.size() == 1) {
+                } else if (roomStatuses.size() == 1) {
                     //kickstart the interpolation process
                     //first and last points need to
-                        roomStatuses.add(new RoomStatus(
-                                100.0f,
-                                10000000.0f,
-                                LocalDateTime.MAX));
-                        roomStatuses.add(new RoomStatus(
-                                -100.0f,
-                                -10000000.0f,
-                                LocalDateTime.MAX));
-                    }
+                    roomStatuses.add(new RoomStatus(
+                            100.0f,
+                            100.0f,
+                            10000000.0f,
+                            10000000.0f,
+                            LocalDateTime.MAX));
+                    roomStatuses.add(new RoomStatus(
+                            -100.0f,
+                            -100.0f,
+                            -10000000.0f,
+                            -10000000.0f,
+                            LocalDateTime.MAX));
+                }
                 updateMachinery();
             } catch (Codec.CodecException | OntologyException e) {
                 e.printStackTrace();
@@ -195,7 +206,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     private void machineryUpdateWaitForResponseStep() {
         ACLMessage msg = myAgent.receive(currentTemplate);
         if (msg != null) {
-            if(msg.getPerformative() == ACLMessage.AGREE) {
+            if (msg.getPerformative() == ACLMessage.AGREE) {
                 step = Step.INIT;
                 lastUpdate = DateTimeSimulator.getCurrentDate();
             }
@@ -216,13 +227,13 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                 Conversions.toLocalDateTime(snapshot.getTime())
                         .isAfter(DateTimeSimulator.getCurrentDate().plusDays(2)))) {
             enterWeatherForecasterWaitForResponseStep();
-        } else if(DateTimeSimulator.getCurrentDate().isBefore(lastUpdate.plusMinutes(MINUTES_BETWEEN_UPDATES))) {
+        } else if (DateTimeSimulator.getCurrentDate().isBefore(lastUpdate.plusMinutes(MINUTES_BETWEEN_UPDATES))) {
             long blockTime = (long) (ChronoUnit.MILLIS.between(DateTimeSimulator.getCurrentDate(),
-                                lastUpdate.plusMinutes(MINUTES_BETWEEN_UPDATES))/DateTimeSimulator.getTimeScale());
+                    lastUpdate.plusMinutes(MINUTES_BETWEEN_UPDATES)) / DateTimeSimulator.getTimeScale());
             step = Step.INIT;
-            if(blockTime > 0)
+            if (blockTime > 0)
                 block(blockTime);
-        }  else {
+        } else {
             enterClimateWaitForResponseStep();
         }
     }
@@ -242,23 +253,24 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
 
     private Machinery prepareNextRequiredMachinery() {
         float requiredTemperatureSlope = getRequiredTemperatureSlope();
-        float requiredHeatingPower = calculateRequiredHeatingPower(requiredTemperatureSlope);
+        float temperatureMaintainingHeatingPower = calculateTemperatureMaintainingHeatingPower(requiredTemperatureSlope);
+        float requiredHumiditySlope = getRequiredHumiditySlope();
+        float humidityMaintainingAirPerSecond = calculateHumidityMaintainingAirPerSecond(requiredHumiditySlope);
         return new Machinery(
-                prepareNextAirConditioner(requiredHeatingPower),
-                prepareNextHeater(requiredHeatingPower),
-                prepareNextVentilator()
+                prepareNextAirConditioner(temperatureMaintainingHeatingPower, humidityMaintainingAirPerSecond),
+                prepareNextHeater(temperatureMaintainingHeatingPower),
+                prepareNextVentilator(humidityMaintainingAirPerSecond)
         );
     }
 
     private float getRequiredTemperatureSlope() {
 
-        if(meetingInProgress()) {
+        if (meetingInProgress()) {
             return (context.getNextMeeting().getTemperature()
                     - currentClimate.getTemperature()) / ChronoUnit.SECONDS.between(
                     DateTimeSimulator.getCurrentDate(),
                     DateTimeSimulator.getCurrentDate().plusMinutes(MINUTES_BETWEEN_UPDATES));
-        }
-        else {
+        } else {
             return (context.getNextMeeting().getTemperature()
                     - currentClimate.getTemperature()) / ChronoUnit.SECONDS.between(
                     DateTimeSimulator.getCurrentDate(),
@@ -266,12 +278,37 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
         }
     }
 
-    private float calculateRequiredHeatingPower(float requiredTemperatureSlope) {
+    private float getRequiredHumiditySlope() {
+
+        if (meetingInProgress()) {
+            return (context.getRelativeHumidityToMaintain()
+                    - currentClimate.getRelativeHumidity()) / ChronoUnit.SECONDS.between(
+                    DateTimeSimulator.getCurrentDate(),
+                    DateTimeSimulator.getCurrentDate().plusMinutes(MINUTES_BETWEEN_UPDATES));
+        } else {
+            return (context.getRelativeHumidityToMaintain()
+                    - currentClimate.getRelativeHumidity()) / ChronoUnit.SECONDS.between(
+                    DateTimeSimulator.getCurrentDate(),
+                    Conversions.toLocalDateTime(context.getNextMeeting().getStartDate()));
+        }
+    }
+
+    private float calculateTemperatureMaintainingHeatingPower(float requiredTemperatureSlope) {
+        Stream<RoomStatus> statusesWithUniqueTempSlopes = roomStatuses.stream()
+                .filter(status ->
+                        roomStatuses
+                                .stream()
+                                .noneMatch(otherStatus ->
+                                        Helpers.almostEqual(
+                                                status.getTemperatureSlope(),
+                                                otherStatus.getTemperatureSlope(),
+                                                SLOPE_TOLERANCE)
+                                                && otherStatus.getTime().isAfter(status.getTime())));
         List<Float> arguments = new ArrayList<>();
         List<Float> values = new ArrayList<>();
-        roomStatuses.stream()
+        statusesWithUniqueTempSlopes
                 .sorted(Comparator.comparing(RoomStatus::getTemperatureSlope))
-                .forEachOrdered(status-> {
+                .forEachOrdered(status -> {
                     arguments.add(status.getTemperatureSlope());
                     values.add(status.getHeatingPower());
                 });
@@ -280,57 +317,105 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
         return Math.max(Math.min(unboundRequiredHeatingPower,
                 currentMachinery.getHeater().getHeatingPower().getMaxValue()),
                 -currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue());
-
     }
 
-    private AirConditioner prepareNextAirConditioner(float requiredHeatingPower) {
-        if (requiredHeatingPower < -POWER_TOLERANCE) {
-            return new AirConditioner(
-                    new MachineParameter(
-                            currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue(), null),
-                    new MachineParameter(
-                            -requiredHeatingPower, null));
+    private float calculateHumidityMaintainingAirPerSecond(float requiredHumiditySlope) {
+        Stream<RoomStatus> statusesWithUniqueHumiditySlopes = roomStatuses.stream()
+                .filter(status ->
+                        roomStatuses
+                                .stream()
+                                .noneMatch(otherStatus ->
+                                        Helpers.almostEqual(
+                                                status.getHumiditySlope(),
+                                                otherStatus.getHumiditySlope(),
+                                                SLOPE_TOLERANCE)
+                                                && otherStatus.getTime().isAfter(status.getTime())));
+        List<Float> arguments = new ArrayList<>();
+        List<Float> values = new ArrayList<>();
+        statusesWithUniqueHumiditySlopes
+                .sorted(Comparator.comparing(RoomStatus::getHumiditySlope))
+                .forEachOrdered(status -> {
+                    arguments.add(status.getHumiditySlope());
+                    values.add(status.getAirExchangedPerSecond());
+                });
+        float unboundRequiredAirPerSecond = Interpolation.calculateValueAt(requiredHumiditySlope,
+                arguments, values);
+
+        float minAirPerSecond
+                = Math.min(-(currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue()
+                - getAirConditioningNeededToBalanceRequiredVentilation()), 0);
+        float maxAirPerSecond = Math.max(0, currentMachinery.getVentilator().getAirExchangedPerSecond().getMaxValue()
+                - context.getRequiredVentilation());
+        return Math.max(Math.min(unboundRequiredAirPerSecond,
+                maxAirPerSecond),
+                minAirPerSecond);
+    }
+
+    private AirConditioner prepareNextAirConditioner(float temperatureMaintainingHeatingPower, float humidityMaintainingAirPerSecond) {
+        MachineParameter nextACAirPerSecond = prepareNextACAirPerSecond(humidityMaintainingAirPerSecond);
+        MachineParameter nextACCoolingPower = prepareNextACCoolingPower(temperatureMaintainingHeatingPower);
+        if (nextACAirPerSecond == null && nextACCoolingPower == null) {
+            return null;
+        } else {
+            return new AirConditioner(nextACAirPerSecond, nextACCoolingPower);
+        }
+    }
+
+    private MachineParameter prepareNextACAirPerSecond(float humidityMaintainingAirPerSecond) {
+        float airConditioningNeededToBalanceRequiredVentilation
+                = getAirConditioningNeededToBalanceRequiredVentilation();
+        float actualAirConditioningAirPerSecondRequired
+                = -humidityMaintainingAirPerSecond + airConditioningNeededToBalanceRequiredVentilation;
+        if (actualAirConditioningAirPerSecondRequired > AIR_EXCHANGED_PER_SECOND_TOLERANCE) {
+            return new MachineParameter(
+                    Math.min(
+                            currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue(),
+                            actualAirConditioningAirPerSecondRequired),
+                    null);
         } else if (!Helpers.almostEqual(
                 0.0f,
-                currentMachinery.getHeater().getHeatingPower().getCurrentValue(),
-                POWER_TOLERANCE)) {
-            return new AirConditioner(
-                    new MachineParameter(
-                            0.0f, null),
-                    new MachineParameter(
-                            0.0f, null));
-        }
-        return null;
-    }
-
-    private Ventilator prepareNextVentilator() {
-        if (!Helpers.almostEqual(
-                currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue(),
-                context.getRequiredVentilation(),
+                currentMachinery.getAirConditioner().getAirExchangedPerSecond().getCurrentValue(),
                 AIR_EXCHANGED_PER_SECOND_TOLERANCE)) {
-            if (currentClimate.getAirQuality() < 1-AIR_QUALITY_TOLERANCE &&
-                    !Helpers.almostEqual(
-                            currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue(),
-                            currentMachinery.getVentilator().getAirExchangedPerSecond().getMaxValue(),
-                            AIR_EXCHANGED_PER_SECOND_TOLERANCE)) {
-                return new Ventilator(
-                        new MachineParameter(context.getRequiredVentilation(), null));
-            }
-            if (currentClimate.getAirQuality() > 1+AIR_QUALITY_TOLERANCE &&
-                    !Helpers.almostEqual(
-                            currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue(),
-                            0, AIR_EXCHANGED_PER_SECOND_TOLERANCE)) {
-                return new Ventilator(
-                        new MachineParameter(context.getRequiredVentilation(), null));
-            }
+            return new MachineParameter(0.0f, null);
         }
         return null;
     }
 
-    private Heater prepareNextHeater(float requiredHeatingPower) {
-        if (requiredHeatingPower > POWER_TOLERANCE) {
+    private MachineParameter prepareNextACCoolingPower(float temperatureMaintainingHeatingPower) {
+        float actualCoolingPowerRequired = -temperatureMaintainingHeatingPower;
+        if (actualCoolingPowerRequired > POWER_TOLERANCE) {
+            return new MachineParameter(actualCoolingPowerRequired, null);
+        } else if (!Helpers.almostEqual(
+                0.0f,
+                currentMachinery.getAirConditioner().getCoolingPower().getCurrentValue(),
+                POWER_TOLERANCE)) {
+            return new MachineParameter(0.0f, null);
+        }
+        return null;
+    }
+
+    private Ventilator prepareNextVentilator(float humidityMaintainingAirPerSecond) {
+        float actualVentilationRequired = Math.min(
+                Math.max(humidityMaintainingAirPerSecond, 0)
+                        + context.getRequiredVentilation(),
+                currentMachinery.getVentilator().getAirExchangedPerSecond().getMaxValue());
+        if (!Helpers.almostEqual(
+                actualVentilationRequired,
+                currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue(),
+                AIR_EXCHANGED_PER_SECOND_TOLERANCE)) {
+            return new Ventilator(
+                    new MachineParameter(
+                            actualVentilationRequired,
+                            null)
+            );
+        }
+        return null;
+    }
+
+    private Heater prepareNextHeater(float temperatureMaintainingHeatingPower) {
+        if (temperatureMaintainingHeatingPower > POWER_TOLERANCE) {
             return new Heater(new MachineParameter(
-                    requiredHeatingPower, null
+                    temperatureMaintainingHeatingPower, null
             ));
         } else if (!Helpers.almostEqual(
                 0.0f,
@@ -350,6 +435,13 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                 && Conversions.toLocalDateTime(
                 context.getNextMeeting().getEndDate())
                 .isAfter(DateTimeSimulator.getCurrentDate());
+    }
+
+    private float getAirConditioningNeededToBalanceRequiredVentilation() {
+        WeatherSnapshot currentWeather = Helpers.interpolateWeather(weatherSnapshots, DateTimeSimulator.getCurrentDate());
+        return context.getRequiredVentilation() *
+                (currentWeather.getAbsoluteHumidity() - currentClimate.getAbsoluteHumidity())
+                / currentClimate.getAbsoluteHumidity();
     }
 
     private void enterMachineryInfoWaitForResponseStep() {

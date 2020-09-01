@@ -64,7 +64,8 @@ public class ClimateInformingBehaviour extends CyclicBehaviour {
                     reply.setPerformative(ACLMessage.INFORM);
                     myAgent.getContentManager().fillContent(reply, roomClimate);
                     context.getLogger().log("replying to climate request: roomId: " + infoRequest.getRoomId() +
-                            ", temperature: " + roomClimate.getTemperature());
+                            ", temperature: " + roomClimate.getTemperature() +
+                            ", relative humidity: " + roomClimate.getRelativeHumidity());
                     myAgent.send(reply);
                 } else {
                     replyRefuse(msg);

@@ -6,15 +6,15 @@ public class RoomStatus {
     private float temperatureSlope;
     private float humiditySlope;
     /**
-     * positive - power of the heater
-     * negative - power of the air conditioner
+     * positive -> heater.power=value, ac.power = 0
+     * negative -> heater.power = 0, ac.power = -value
      */
     private float heatingPower;
     /**
-     * positive - air exchanged per second by ventilation - minimal required ventilation
-     * negative - air exchanged per second by air conditioning - minimal required ventilation
-     * so it is zero when ventilation works on minimal required aeps
-     * and ac works enough to counteract humidification created by ventilation
+     * positive -> ac.airPerSecond = 0, ventilation.airPerSecond = value + minimalRequiredVentilation
+     * negative -> ac.airPerSecond = -value, ventilation.airPerSecond = minimalRequiredVentilation
+     * so its the same as with heating power -> ac counteracts ventilation - its just that the tipping point is not at zero
+     * but at minimalRequiredVentilation
      */
     private float airExchangedPerSecond;
     private LocalDateTime time;

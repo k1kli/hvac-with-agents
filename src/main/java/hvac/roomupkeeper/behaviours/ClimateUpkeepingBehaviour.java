@@ -33,7 +33,6 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     private MessageTemplate currentTemplate;
     private static final int CLIMATE_FORGET_TIME_SECONDS = 3600 * 2;
     private static final int MINUTES_BETWEEN_UPDATES = 3;
-    private static final float AIR_QUALITY_TOLERANCE = 0.05f;
     private static final float POWER_TOLERANCE = 0.5f;
     private static final float AIR_EXCHANGED_PER_SECOND_TOLERANCE = 0.1f;
     private static final float SLOPE_TOLERANCE = 0.000001f;
@@ -158,11 +157,8 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                                 currentMachinery.getAirConditioner().getCoolingPower().getCurrentValue();
                         float airExchangedPerSecond =
                                 currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue()
-                                        > context.getRequiredVentilation() ?
-                                        currentMachinery.getVentilator().getAirExchangedPerSecond().getCurrentValue()
-                                                - context.getRequiredVentilation() :
-                                        -(currentMachinery.getAirConditioner().getAirExchangedPerSecond().getCurrentValue()
-                                                - getAirConditioningNeededToBalanceRequiredVentilation());
+                                        -currentMachinery.getAirConditioner().getAirExchangedPerSecond().getCurrentValue()
+                                                - context.getRequiredVentilation();
                         roomStatuses.add(new RoomStatus(
                                 temperatureSlope,
                                 humiditySlope, heatingPower,
@@ -294,6 +290,8 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     }
 
     private float calculateTemperatureMaintainingHeatingPower(float requiredTemperatureSlope) {
+        //not include older statuses that have the same slope as the newer ones
+        //as these slopes will be used as interpolation knots arguments and have to be distinct
         Stream<RoomStatus> statusesWithUniqueTempSlopes = roomStatuses.stream()
                 .filter(status ->
                         roomStatuses
@@ -320,6 +318,8 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     }
 
     private float calculateHumidityMaintainingAirPerSecond(float requiredHumiditySlope) {
+        //not include older statuses that have the same slope as the newer ones
+        //as these slopes will be used as interpolation knots arguments and have to be distinct
         Stream<RoomStatus> statusesWithUniqueHumiditySlopes = roomStatuses.stream()
                 .filter(status ->
                         roomStatuses
@@ -342,8 +342,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                 arguments, values);
 
         float minAirPerSecond
-                = Math.min(-(currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue()
-                - getAirConditioningNeededToBalanceRequiredVentilation()), 0);
+                = -currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue();
         float maxAirPerSecond = Math.max(0, currentMachinery.getVentilator().getAirExchangedPerSecond().getMaxValue()
                 - context.getRequiredVentilation());
         return Math.max(Math.min(unboundRequiredAirPerSecond,
@@ -362,10 +361,8 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     }
 
     private MachineParameter prepareNextACAirPerSecond(float humidityMaintainingAirPerSecond) {
-        float airConditioningNeededToBalanceRequiredVentilation
-                = getAirConditioningNeededToBalanceRequiredVentilation();
         float actualAirConditioningAirPerSecondRequired
-                = -humidityMaintainingAirPerSecond + airConditioningNeededToBalanceRequiredVentilation;
+                = -humidityMaintainingAirPerSecond;
         if (actualAirConditioningAirPerSecondRequired > AIR_EXCHANGED_PER_SECOND_TOLERANCE) {
             return new MachineParameter(
                     Math.min(
@@ -435,13 +432,6 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                 && Conversions.toLocalDateTime(
                 context.getNextMeeting().getEndDate())
                 .isAfter(DateTimeSimulator.getCurrentDate());
-    }
-
-    private float getAirConditioningNeededToBalanceRequiredVentilation() {
-        WeatherSnapshot currentWeather = Helpers.interpolateWeather(weatherSnapshots, DateTimeSimulator.getCurrentDate());
-        return context.getRequiredVentilation() *
-                (currentWeather.getAbsoluteHumidity() - currentClimate.getAbsoluteHumidity())
-                / currentClimate.getAbsoluteHumidity();
     }
 
     private void enterMachineryInfoWaitForResponseStep() {

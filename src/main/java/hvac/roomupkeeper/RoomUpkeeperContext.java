@@ -5,8 +5,8 @@ import hvac.util.Logger;
 import jade.core.AID;
 
 public class RoomUpkeeperContext {
-    private final AID weatherForecaster;
-    private final AID simulationAgent;
+    private AID weatherForecaster;
+    private AID simulationAgent;
     private final int myRoomId;
 
     /**
@@ -22,9 +22,7 @@ public class RoomUpkeeperContext {
     private final static float perM2RequiredVentilation = 0.0003f;//0.3L/s/m^2 = 0.0003m^3/s/m^2
     private final Logger logger = new Logger();
 
-    public RoomUpkeeperContext(AID weatherForecaster, AID simulationAgent, int myRoomId, float myRoomArea) {
-        this.weatherForecaster = weatherForecaster;
-        this.simulationAgent = simulationAgent;
+    public RoomUpkeeperContext(int myRoomId, float myRoomArea) {
         this.myRoomId = myRoomId;
         this.myRoomArea = myRoomArea;
         this.nextMeeting = null;
@@ -61,5 +59,13 @@ public class RoomUpkeeperContext {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public void setWeatherForecaster(AID weatherForecaster) {
+        this.weatherForecaster = weatherForecaster;
+    }
+
+    public void setSimulationAgent(AID simulationAgent) {
+        this.simulationAgent = simulationAgent;
     }
 }

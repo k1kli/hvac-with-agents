@@ -7,8 +7,9 @@ import hvac.ontologies.weather.WeatherOntology;
 import hvac.roomupkeeper.behaviours.ClimateUpkeepingBehaviour;
 import hvac.time.DateTimeSimulator;
 import hvac.util.Conversions;
+import hvac.util.df.DfHelpers;
+import hvac.util.df.FindingBehaviour;
 import jade.content.lang.sl.SLCodec;
-import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.FIPANames;
 
@@ -19,6 +20,7 @@ public class RoomUpkeeperAgent extends Agent {
     @Override
     protected void setup() {
         if(!initTimeFromArgs(this, this::usage)) return;
+
         getContentManager().registerLanguage(new SLCodec(),
                 FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(RoomClimateOntology.getInstance());
@@ -30,19 +32,27 @@ public class RoomUpkeeperAgent extends Agent {
             doDelete();
             return;
         }
-        context.getLogger().setAgentName("room upkeeper (" + context.getMyRoomId() + ")");
-        addBehaviour(new ClimateUpkeepingBehaviour(this, context));
-        context.setNextMeeting(new Meeting(
-                "abc",
-                Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(2)),
-                Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(4)),
-                5,
-                300.0f));
+        if(!DfHelpers.tryRegisterInDfWithServiceName(this, "upkeeper-"+context.getMyRoomId()))
+            return;
+        addBehaviour(new FindingBehaviour(this, "simulation",
+                simulationDescriptor->{
+            context.setSimulationAgent(simulationDescriptor.getName());
+            addBehaviour(new FindingBehaviour(this, "weather-forecaster",
+                    forecasterDescriptor->{
+                context.setWeatherForecaster(forecasterDescriptor.getName());
+                context.getLogger().setAgentName("room upkeeper (" + context.getMyRoomId() + ")");
+                addBehaviour(new ClimateUpkeepingBehaviour(this, context));
+                context.setNextMeeting(new Meeting(
+                        "abc",
+                        Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(2)),
+                        Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(4)),
+                        5,
+                        300.0f));
+            }));
+        }));
     }
 
     private RoomUpkeeperContext getContext() {
-        AID weatherForecaster = new AID("forecaster", false);
-        AID simulationAgent = new AID("simulation", false);
         if(getArguments().length != 4) {
             usage("incorrect number of arguments, required:4, provided: " + getArguments().length);
             return null;
@@ -68,7 +78,7 @@ public class RoomUpkeeperAgent extends Agent {
             usage("room area is not valid");
             return null;
         }
-        return new RoomUpkeeperContext(weatherForecaster,simulationAgent,myRoomId, myRoomArea);
+        return new RoomUpkeeperContext(myRoomId, myRoomArea);
     }
 
     private void usage(String err) {

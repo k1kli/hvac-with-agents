@@ -5,6 +5,7 @@ import hvac.calendar.CalendarException;
 import hvac.calendar.CalendarWrapper;
 import hvac.coordinator.behaviours.MeetingUpdatingBehaviour;
 import hvac.database.Connection;
+import hvac.util.df.DfHelpers;
 import jade.core.Agent;
 
 import static hvac.util.Helpers.initTimeFromArgs;
@@ -17,6 +18,7 @@ public class CoordinatorAgent extends Agent {
     @Override
     protected void setup() {
         if(!initTimeFromArgs(this, this::usage)) return;
+        if(!DfHelpers.tryRegisterInDfWithServiceName(this, "coordinator")) return;
         database = new Connection();
         CalendarWrapper wrapper = new CalendarWrapper();
         try {

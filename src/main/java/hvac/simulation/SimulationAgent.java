@@ -19,9 +19,7 @@ import jade.content.lang.sl.SLCodec;
 import jade.core.Agent;
 import jade.domain.FIPANames;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import static hvac.util.Helpers.initTimeFromArgs;
 
 @SuppressWarnings("unused")
 public class SimulationAgent extends Agent {
@@ -29,23 +27,8 @@ public class SimulationAgent extends Agent {
     Connection connection;
     @Override
     protected void setup() {
-        if (getArguments() == null || getArguments().length != 2) {
-            usage("Wrong args num");
-            doDelete();
-            return;
-        }
-        LocalDateTime startTime;
-        float timeScale;
-        try {
-            timeScale = Float.parseFloat(getArguments()[0].toString());
-            startTime = LocalDateTime.parse(getArguments()[1].toString(),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        } catch (NumberFormatException | DateTimeParseException e) {
-            usage(e.getMessage());
-            doDelete();
-            return;
-        }
-        DateTimeSimulator.init(startTime, timeScale);
+        if(!initTimeFromArgs(this, this::usage)) return;
+        simulationContext.getLogger().setAgentName("simulation");
         getContentManager().registerLanguage(new SLCodec(),
                 FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(RoomClimateOntology.getInstance());
@@ -54,7 +37,7 @@ public class SimulationAgent extends Agent {
         loadMap();
         setDefaultClimate();
         addBehaviour(new ClimateUpdatingBehaviour(
-                this, 1000, simulationContext, timeScale,
+                this, 1000, simulationContext, DateTimeSimulator.getTimeScale(),
                 new DatabaseForecastProvider(connection)));
         Room r = simulationContext.getRoomMap().getRooms().iterator().next();
         addBehaviour(new ClimateInformingBehaviour(this, simulationContext));

@@ -6,7 +6,10 @@ import hvac.simulation.rooms.RoomClimate;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Conversions {
     public static LocalDateTime toLocalDateTime(Date date) {
@@ -37,5 +40,14 @@ public class Conversions {
 
     public static hvac.ontologies.machinery.MachineParameter toOntologyParameter(hvac.simulation.machinery.MachineParameter parameter) {
         return new MachineParameter(parameter.getCurrentValue(), parameter.getMaxValue());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> toJavaList(jade.util.leap.List jadeList) {
+        try {
+            return Arrays.stream(jadeList.toArray()).map(it->(T)it).collect(Collectors.toList());
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("elements of given jade list are not of type required for result list");
+        }
     }
 }

@@ -165,7 +165,7 @@ public class ClimateUpdatingBehaviour extends TickerBehaviour {
         float saturationWaterVapour = (float)(pressureFunctionValue * 6.112
                 * Math.exp(17.62*tempCelsius/(243.12+tempCelsius)));
         float currentWaterVapour = newClimate.getAbsoluteHumidity() * 461.5f * newClimate.getTemperature();
-        return currentWaterVapour/saturationWaterVapour;
+        return currentWaterVapour/saturationWaterVapour*0.01f;
     }
 
     private float calculateAirQualityFor(Room r, RoomClimate oldClimate) {

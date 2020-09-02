@@ -20,4 +20,8 @@ public class DateTimeSimulator {
         double diff = (double)(realCurrentDate - realStartDate) * timeScale * 0.001f;
         return startDate.plusSeconds((long)diff);
     }
+
+    public static float getTimeScale() {
+        return timeScale;
+    }
 }

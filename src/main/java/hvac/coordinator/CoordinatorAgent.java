@@ -5,12 +5,9 @@ import hvac.calendar.CalendarException;
 import hvac.calendar.CalendarWrapper;
 import hvac.coordinator.behaviours.MeetingUpdatingBehaviour;
 import hvac.database.Connection;
-import hvac.time.DateTimeSimulator;
 import jade.core.Agent;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import static hvac.util.Helpers.initTimeFromArgs;
 
 @SuppressWarnings("unused")
 public class CoordinatorAgent extends Agent {
@@ -19,7 +16,7 @@ public class CoordinatorAgent extends Agent {
     CoordinatorContext context = new CoordinatorContext();
     @Override
     protected void setup() {
-        initTimeFromArgs();
+        if(!initTimeFromArgs(this, this::usage)) return;
         database = new Connection();
         CalendarWrapper wrapper = new CalendarWrapper();
         try {
@@ -31,26 +28,6 @@ public class CoordinatorAgent extends Agent {
             return;
         }
         this.addBehaviour(new MeetingUpdatingBehaviour(this, 1000, calendar, context));
-    }
-
-    private void initTimeFromArgs() {
-        if (getArguments() == null || getArguments().length != 2) {
-            usage("Wrong args num");
-            doDelete();
-            return;
-        }
-        LocalDateTime startTime;
-        float timeScale;
-        try {
-            timeScale = Float.parseFloat(getArguments()[0].toString());
-            startTime = LocalDateTime.parse(getArguments()[1].toString(),
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        } catch (NumberFormatException | DateTimeParseException e) {
-            usage(e.getMessage());
-            doDelete();
-            return;
-        }
-        DateTimeSimulator.init(startTime, timeScale);
     }
 
     private void usage(String err) {

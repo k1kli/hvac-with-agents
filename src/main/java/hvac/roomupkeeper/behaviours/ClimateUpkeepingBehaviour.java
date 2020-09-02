@@ -51,7 +51,6 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
 
     private Machinery currentMachinery = null;
     private List<WeatherSnapshot> weatherSnapshots = new ArrayList<>();
-    private boolean started = false;
 
     public ClimateUpkeepingBehaviour(Agent a, RoomUpkeeperContext context) {
         super(a);
@@ -60,12 +59,6 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
 
     @Override
     public void action() {
-        //wait for other agents to initialize
-        if (!started) {
-            started = true;
-            block(1000);
-            return;
-        }
         //remove expired statuses, so only recent data is used in interpolation
         roomStatuses.removeIf(status -> status.getTime()
                 .isBefore(DateTimeSimulator.getCurrentDate().minusSeconds(CLIMATE_FORGET_TIME_SECONDS)));

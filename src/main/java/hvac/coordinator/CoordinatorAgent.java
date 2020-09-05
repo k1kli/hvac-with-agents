@@ -67,7 +67,7 @@ public class CoordinatorAgent extends Agent {
             try {
                 newContainer.createNewAgent("room-coordinator-" + room.getId(),
                         RoomCoordinatorAgent.class.getCanonicalName(),
-                        new Object[]{room.getId(), getAID(), myNeighboursIds, myWalls}).start();
+                        new Object[]{getArguments()[0], getArguments()[1], room.getId(), getAID(), myNeighboursIds, myWalls}).start();
 
                 newContainer.createNewAgent("upkeeper-" + room.getId(),
                         RoomUpkeeperAgent.class.getCanonicalName(),

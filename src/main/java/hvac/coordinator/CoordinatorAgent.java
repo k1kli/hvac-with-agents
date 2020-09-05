@@ -5,10 +5,23 @@ import hvac.calendar.CalendarException;
 import hvac.calendar.CalendarWrapper;
 import hvac.coordinator.behaviours.MeetingUpdatingBehaviour;
 import hvac.database.Connection;
+import hvac.ontologies.meeting.MeetingOntology;
+import hvac.roomcoordinator.RoomCoordinatorAgent;
+import hvac.roomupkeeper.RoomUpkeeperAgent;
+import hvac.simulation.rooms.Room;
+import hvac.simulation.rooms.RoomLink;
+import hvac.simulation.rooms.RoomMap;
+import hvac.simulation.rooms.RoomWall;
 import hvac.util.df.DfHelpers;
-import jade.core.Agent;
+import jade.content.lang.sl.SLCodec;
+import jade.core.Runtime;
+import jade.core.*;
+import jade.wrapper.AgentContainer;
+
+import java.util.ArrayList;
 
 import static hvac.util.Helpers.initTimeFromArgs;
+import static hvac.util.Helpers.loadMap;
 
 @SuppressWarnings("unused")
 public class CoordinatorAgent extends Agent {
@@ -17,6 +30,9 @@ public class CoordinatorAgent extends Agent {
     CoordinatorContext context = new CoordinatorContext();
     @Override
     protected void setup() {
+        getContentManager().registerLanguage(new SLCodec());
+        getContentManager().registerOntology(MeetingOntology.getInstance());
+        context.getLogger().setAgentName("coordinator");
         if(!initTimeFromArgs(this, this::usage)) return;
         if(!DfHelpers.tryRegisterInDfWithServiceName(this, "coordinator")) return;
         database = new Connection();
@@ -29,7 +45,41 @@ public class CoordinatorAgent extends Agent {
             doDelete();
             return;
         }
+        deployAgents();
         this.addBehaviour(new MeetingUpdatingBehaviour(this, 1000, calendar, context));
+    }
+
+    private void deployAgents() {
+        RoomMap roomMap = new RoomMap();
+        loadMap(roomMap);
+
+        for (Room room : roomMap.getRooms()) {
+            Profile profile = new ProfileImpl();
+            profile.setParameter(Profile.MAIN_HOST, "localhost");
+            profile.setParameter(Profile.CONTAINER_NAME, Integer.toString(room.getId()));
+            AgentContainer newContainer = Runtime.instance().createAgentContainer(profile);
+            ArrayList<Integer> myNeighboursIds = new ArrayList<>();
+            ArrayList<RoomWall> myWalls = new ArrayList<>();
+            for (RoomLink roomLink : roomMap.getNeighbors(room)){
+                myNeighboursIds.add(roomLink.getNeighbor().getId());
+                myWalls.add(roomLink.getWall());
+            }
+            try {
+                newContainer.createNewAgent("room-coordinator-" + room.getId(),
+                        RoomCoordinatorAgent.class.getCanonicalName(),
+                        new Object[]{room.getId(), getAID(), myNeighboursIds, myWalls}).start();
+
+                newContainer.createNewAgent("upkeeper-" + room.getId(),
+                        RoomUpkeeperAgent.class.getCanonicalName(),
+                        new Object[]{getArguments()[0], getArguments()[1], room.getId(), room.getArea()}).start();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            context.addRoom(room.getSeats(),
+                    new AID("room-coordinator-" + room.getId() + "@" + newContainer.getPlatformName(),AID.ISGUID));
+        }
+
+        context.getLogger().log("Deployed all coordinators and upkeepers");
     }
 
     private void usage(String err) {

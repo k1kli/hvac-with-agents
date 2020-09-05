@@ -13,7 +13,8 @@ Select Delegate IDE build/run actions to Maven and apply
 In top right corner press Add configuration.
 Click the + button and choose application.
 Select jade.Boot as the main class and specify arguments, for example:
--gui -agents a:HelloWorldAgent
+1. (dummy to check if JADE is working) -gui -agents a:HelloWorldAgent
+2. (to run current build) -gui -agents simulation:hvac.simulation.SimulationAgent(20,"2015-05-20 10:20:00")
 
 You can name this configuration appropriately.
 

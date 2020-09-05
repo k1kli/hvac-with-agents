@@ -6,20 +6,18 @@ import hvac.ontologies.roomclimate.RoomClimate;
 import hvac.ontologies.roomclimate.RoomClimateOntology;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
-import jade.content.onto.Ontology;
 import jade.content.onto.OntologyException;
-import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 
 import java.util.Optional;
 
+import static hvac.util.CommonMessengerFunctions.createActionMessage;
+
 /**
  * class for use in agents that want communicate with simulation agent
  */
-@SuppressWarnings("unused")
 public class SimulationAgentMessenger {
     /**
      * prepares message that when sent to simulation agent will result in correct room climate
@@ -105,17 +103,5 @@ public class SimulationAgentMessenger {
             throws Codec.CodecException, OntologyException {
         UpdateMachinery request = new UpdateMachinery(machinery, roomId);
         return createActionMessage(myAgent, simulationAgent, request, MachineryOntology.getInstance());
-    }
-
-    private static ACLMessage createActionMessage(Agent myAgent, AID simulationAgent, jade.content.AgentAction request,
-                                                  Ontology ontologyInstance)
-            throws Codec.CodecException, OntologyException {
-        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
-        msg.addReceiver(simulationAgent);
-        msg.setLanguage(FIPANames.ContentLanguage.FIPA_SL0);
-        msg.setOntology(ontologyInstance.getName());
-        Action action = new Action(simulationAgent, request);
-        myAgent.getContentManager().fillContent(msg, action);
-        return msg;
     }
 }

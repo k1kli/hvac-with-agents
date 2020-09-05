@@ -4,6 +4,7 @@ import jade.content.onto.BasicOntology;
 import jade.content.onto.Ontology;
 import jade.content.schema.AgentActionSchema;
 import jade.content.schema.ConceptSchema;
+import jade.content.schema.ObjectSchema;
 import jade.content.schema.PrimitiveSchema;
 
 public class MeetingOntology extends Ontology {
@@ -20,6 +21,9 @@ public class MeetingOntology extends Ontology {
     public static final String REQUEST = "request";
     public static final String REQUEST_MEETING = "meeting";
     public static final String REQUEST_STATUS = "status";
+
+    public static final String MANTAIN_CONDITIONS = "MantainConditions";
+    public static final String MANTAIN_CONDITIONS_CONDITIONS = "conditions";
 
     private static Ontology theInstance = new MeetingOntology();
 
@@ -41,8 +45,13 @@ public class MeetingOntology extends Ontology {
 
             AgentActionSchema as = new AgentActionSchema(REQUEST);
             add(as, Request.class);
-            cs.add(REQUEST_MEETING, (ConceptSchema) getSchema(MEETING));
-            cs.add(REQUEST_STATUS, (ConceptSchema) getSchema(REQUEST_STATUS));
+            as.add(REQUEST_MEETING, (ConceptSchema) getSchema(MEETING));
+            as.add(REQUEST_STATUS, (ConceptSchema) getSchema(REQUEST_STATUS));
+
+            as = new AgentActionSchema(MANTAIN_CONDITIONS);
+            add(as, MantainConditions.class);
+            as.add(MANTAIN_CONDITIONS_CONDITIONS, (ConceptSchema)getSchema(MEETING),
+                    0, ObjectSchema.UNLIMITED);
         }
         catch (Exception oe) {oe.printStackTrace();}
     }

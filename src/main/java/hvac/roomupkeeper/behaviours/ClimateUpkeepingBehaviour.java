@@ -62,11 +62,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
         //remove expired statuses, so only recent data is used in interpolation
         roomStatuses.removeIf(status -> status.getTime()
                 .isBefore(DateTimeSimulator.getCurrentDate().minusSeconds(CLIMATE_FORGET_TIME_SECONDS)));
-        //current meeting is over - delete it
-        if (context.getNextMeeting() != null && Conversions.toLocalDateTime(context.getNextMeeting().getEndDate())
-                .isBefore(DateTimeSimulator.getCurrentDate())) {
-            context.setNextMeeting(null);
-        }
+        context.removeCompleteMeetings();
         switch (step) {
             case INIT:
                 initStep();

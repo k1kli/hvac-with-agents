@@ -18,6 +18,7 @@ import hvac.weather.DatabaseForecastProvider;
 import jade.content.lang.sl.SLCodec;
 import jade.core.Agent;
 import jade.domain.FIPANames;
+import jade.wrapper.AgentContainer;
 
 import static hvac.util.Helpers.initTimeFromArgs;
 import static hvac.util.Helpers.loadMap;
@@ -31,6 +32,19 @@ public class SimulationAgent extends Agent {
         if(!initTimeFromArgs(this, this::usage)) return;
         if(!DfHelpers.tryRegisterInDfWithServiceName(this, "simulation")) return;
         simulationContext.getLogger().setAgentName("simulation");
+        AgentContainer myContainer = getContainerController();
+        try {
+            myContainer.createNewAgent("coordinator",
+                    "hvac.coordinator.CoordinatorAgent",
+                    new Object[]{getArguments()[0], getArguments()[1]}).start();
+
+            myContainer.createNewAgent("weather-forecaster",
+                    "hvac.weatherforecaster.WeatherForecasterAgent",
+                    new Object[]{getArguments()[0], getArguments()[1]}).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        simulationContext.getLogger().log("Weather and Coordinator agents started.");
         getContentManager().registerLanguage(new SLCodec(),
                 FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(RoomClimateOntology.getInstance());

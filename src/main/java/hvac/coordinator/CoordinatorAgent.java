@@ -6,6 +6,8 @@ import hvac.calendar.CalendarWrapper;
 import hvac.coordinator.behaviours.MeetingUpdatingBehaviour;
 import hvac.database.Connection;
 import hvac.ontologies.meeting.MeetingOntology;
+import hvac.roomcoordinator.RoomCoordinatorAgent;
+import hvac.roomupkeeper.RoomUpkeeperAgent;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomLink;
 import hvac.simulation.rooms.RoomMap;
@@ -64,11 +66,11 @@ public class CoordinatorAgent extends Agent {
             }
             try {
                 newContainer.createNewAgent("room-coordinator-" + room.getId(),
-                        "hvac.roomcoordinator.RoomCoordinatorAgent",
+                        RoomCoordinatorAgent.class.getCanonicalName(),
                         new Object[]{room.getId(), getAID(), myNeighboursIds, myWalls}).start();
 
                 newContainer.createNewAgent("upkeeper-" + room.getId(),
-                        "hvac.roomupkeeper.RoomUpkeeperAgent",
+                        RoomUpkeeperAgent.class.getCanonicalName(),
                         new Object[]{getArguments()[0], getArguments()[1], room.getId(), room.getArea()}).start();
             } catch (Exception e) {
                 e.printStackTrace();

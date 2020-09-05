@@ -1,5 +1,6 @@
 package hvac.simulation;
 
+import hvac.coordinator.CoordinatorAgent;
 import hvac.database.Connection;
 import hvac.ontologies.machinery.MachineryOntology;
 import hvac.ontologies.roomclimate.RoomClimateOntology;
@@ -15,6 +16,7 @@ import hvac.simulation.rooms.RoomClimate;
 import hvac.time.DateTimeSimulator;
 import hvac.util.df.DfHelpers;
 import hvac.weather.DatabaseForecastProvider;
+import hvac.weatherforecaster.WeatherForecasterAgent;
 import jade.content.lang.sl.SLCodec;
 import jade.core.Agent;
 import jade.domain.FIPANames;
@@ -35,11 +37,11 @@ public class SimulationAgent extends Agent {
         AgentContainer myContainer = getContainerController();
         try {
             myContainer.createNewAgent("coordinator",
-                    "hvac.coordinator.CoordinatorAgent",
+                    CoordinatorAgent.class.getCanonicalName(),
                     new Object[]{getArguments()[0], getArguments()[1]}).start();
 
             myContainer.createNewAgent("weather-forecaster",
-                    "hvac.weatherforecaster.WeatherForecasterAgent",
+                    WeatherForecasterAgent.class.getCanonicalName(),
                     new Object[]{getArguments()[0], getArguments()[1]}).start();
         } catch (Exception e) {
             e.printStackTrace();

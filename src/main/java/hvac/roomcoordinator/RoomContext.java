@@ -2,6 +2,7 @@ package hvac.roomcoordinator;
 
 import hvac.ontologies.meeting.Meeting;
 import hvac.simulation.rooms.RoomWall;
+import hvac.util.Logger;
 import jade.core.AID;
 
 import java.util.*;
@@ -15,6 +16,7 @@ public class RoomContext {
     private Meeting currentMeeting;
     private final PriorityQueue<Meeting> meetingsQueue = new PriorityQueue<>();
     private final Map<String, AbstractMap.SimpleEntry<Meeting, Map<AID, Float>>> neighboursForecastStatus = new HashMap<>();
+    private final Logger logger = new Logger();
 
     RoomContext(int myRoomId, AID coordinator){
         this.myRoomId = myRoomId;
@@ -66,6 +68,10 @@ public class RoomContext {
             return null;
         }
         return meetingsQueue.peek();
+    }
+
+    public Logger getLogger() {
+        return logger;
     }
 
     public boolean isTimeSlotAvailable(Meeting meeting){

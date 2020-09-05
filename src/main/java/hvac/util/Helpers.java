@@ -2,6 +2,9 @@ package hvac.util;
 
 import hvac.ontologies.machinery.Machinery;
 import hvac.ontologies.weather.WeatherSnapshot;
+import hvac.simulation.rooms.Room;
+import hvac.simulation.rooms.RoomMap;
+import hvac.simulation.rooms.RoomWall;
 import hvac.time.DateTimeSimulator;
 import jade.core.Agent;
 
@@ -14,6 +17,25 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 public class Helpers {
+    public static void loadMap(RoomMap roomMap){
+        Room r1 = new Room(1,2,200, 50);
+        Room r2 = new Room(2,2,250, 70);
+        Room r3 = new Room(3,3,150, 35);
+        Room r4 = new Room(4,3,300, 80);
+        RoomWall r12 = new RoomWall(24, 0.4f);
+        RoomWall r23 = new RoomWall(16, 0.2f);
+        RoomWall r34 = new RoomWall(18, 0.5f);
+        RoomWall r41 = new RoomWall(40, 0.1f);
+        roomMap.addRoom(r1);
+        roomMap.addRoom(r2);
+        roomMap.addRoom(r3);
+        roomMap.addRoom(r4);
+        roomMap.linkRooms(r1, r2, r12);
+        roomMap.linkRooms(r2, r3, r23);
+        roomMap.linkRooms(r3, r4, r34);
+        roomMap.linkRooms(r4, r1, r41);
+    }
+
     public static boolean isBetween(LocalDateTime date, LocalDateTime start, LocalDateTime end) {
         return date.isAfter(start) && date.isBefore(end);
     }

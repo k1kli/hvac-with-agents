@@ -12,7 +12,6 @@ import hvac.simulation.machinery.MachineParameter;
 import hvac.simulation.machinery.Ventilator;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomClimate;
-import hvac.simulation.rooms.RoomWall;
 import hvac.time.DateTimeSimulator;
 import hvac.util.df.DfHelpers;
 import hvac.weather.DatabaseForecastProvider;
@@ -21,6 +20,7 @@ import jade.core.Agent;
 import jade.domain.FIPANames;
 
 import static hvac.util.Helpers.initTimeFromArgs;
+import static hvac.util.Helpers.loadMap;
 
 @SuppressWarnings("unused")
 public class SimulationAgent extends Agent {
@@ -36,7 +36,7 @@ public class SimulationAgent extends Agent {
         getContentManager().registerOntology(RoomClimateOntology.getInstance());
         getContentManager().registerOntology(MachineryOntology.getInstance());
         connection = new Connection();
-        loadMap();
+        loadMap(simulationContext.getRoomMap());
         setDefaultClimate();
         addBehaviour(new ClimateUpdatingBehaviour(
                 this, 1000, simulationContext, DateTimeSimulator.getTimeScale(),
@@ -52,25 +52,6 @@ public class SimulationAgent extends Agent {
         System.err.println("timescale - floating point value indicating speed of passing time");
         System.err.println("Date from which to start simulating \"yyyy-MM-dd HH:mm:ss\"");
         System.err.println("err:" + err);
-    }
-
-    private void loadMap() {
-        Room r1 = new Room(1,200, 50);
-        Room r2 = new Room(2,250, 70);
-        Room r3 = new Room(3,150, 35);
-        Room r4 = new Room(4,300, 80);
-        RoomWall r12 = new RoomWall(24, 0.4f);
-        RoomWall r23 = new RoomWall(16, 0.2f);
-        RoomWall r34 = new RoomWall(18, 0.5f);
-        RoomWall r41 = new RoomWall(40, 0.1f);
-        simulationContext.getRoomMap().addRoom(r1);
-        simulationContext.getRoomMap().addRoom(r2);
-        simulationContext.getRoomMap().addRoom(r3);
-        simulationContext.getRoomMap().addRoom(r4);
-        simulationContext.getRoomMap().linkRooms(r1, r2, r12);
-        simulationContext.getRoomMap().linkRooms(r2, r3, r23);
-        simulationContext.getRoomMap().linkRooms(r3, r4, r34);
-        simulationContext.getRoomMap().linkRooms(r4, r1, r41);
     }
 
     private void setDefaultClimate() {

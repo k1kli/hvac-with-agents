@@ -14,6 +14,7 @@ import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomClimate;
 import hvac.simulation.rooms.RoomWall;
 import hvac.time.DateTimeSimulator;
+import hvac.util.df.DfHelpers;
 import hvac.weather.DatabaseForecastProvider;
 import jade.content.lang.sl.SLCodec;
 import jade.core.Agent;
@@ -28,6 +29,7 @@ public class SimulationAgent extends Agent {
     @Override
     protected void setup() {
         if(!initTimeFromArgs(this, this::usage)) return;
+        if(!DfHelpers.tryRegisterInDfWithServiceName(this, "simulation")) return;
         simulationContext.getLogger().setAgentName("simulation");
         getContentManager().registerLanguage(new SLCodec(),
                 FIPANames.ContentLanguage.FIPA_SL0);

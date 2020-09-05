@@ -8,30 +8,41 @@ import java.util.*;
 
 public class RoomContext {
     private static final float defaultTemperature = 21;
-    private AID coordinator;
+    private final int myRoomId;
+    private final AID coordinator;
     private AID myRoomUpkeeper;
-    private HashMap<AID, RoomWall> myNeighbours;
+    private final HashMap<AID, RoomWall> myNeighbours = new HashMap<>();
     private Meeting currentMeeting;
-    private PriorityQueue<Meeting> meetingsQueue = new PriorityQueue<>();
-    private Map<String, AbstractMap.SimpleEntry<Meeting, Map<AID, Float>>> neighboursForecastStatus = new HashMap<>();
+    private final PriorityQueue<Meeting> meetingsQueue = new PriorityQueue<>();
+    private final Map<String, AbstractMap.SimpleEntry<Meeting, Map<AID, Float>>> neighboursForecastStatus = new HashMap<>();
 
-    RoomContext(AID myRoomUpkeeper, AID coordinator, HashMap<AID, RoomWall>  myNeighbours){
+    RoomContext(int myRoomId, AID coordinator){
+        this.myRoomId = myRoomId;
         this.coordinator = coordinator;
-        this.myRoomUpkeeper = myRoomUpkeeper;
-        this.myNeighbours = myNeighbours;
+    }
+
+    public int getMyRoomId() {
+        return myRoomId;
     }
 
     public AID getCoordinator() {
         return coordinator;
     }
 
-    @SuppressWarnings("unused")
     public AID getMyRoomUpkeeper() {
         return myRoomUpkeeper;
     }
 
+    public void setMyRoomUpkeeper(AID myRoomUpkeeper){
+        this.myRoomUpkeeper = myRoomUpkeeper;
+    }
+
     public HashMap<AID, RoomWall>  getMyNeighbours() {
         return myNeighbours;
+    }
+
+    public void addMyNeighbour(AID key, RoomWall value){
+        myNeighbours.put(key, value);
     }
 
     public Meeting getCurrentMeeting() {

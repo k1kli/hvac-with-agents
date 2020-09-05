@@ -15,7 +15,7 @@ Click the + button and choose application.
 Select jade.Boot as the main class and specify arguments, for example:
 -gui -agents a:HelloWorldAgent
 
-You can name this configuration apropriately.
+You can name this configuration appropriately.
 
 Press ok and run.
 
@@ -33,7 +33,7 @@ This will also delete previous weather data.
 
 ### Google Calendar
 To use this project you need to register it with google calendar.
-To do it place provided StoredCredential file in the same location as StoredCredential.hehe file
+To do it place provided StoredCredential file in the same location as StoredCredential.here file
 or generate credentials for your google account [here](https://developers.google.com/calendar/quickstart/java)
 (click Enable the google calendar API button) and place generated file in the same location as
 credentials.json.here file. As StoredCredentials and credentials.json files contain sensitive data

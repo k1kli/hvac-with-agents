@@ -47,7 +47,7 @@ public class RoomUpkeeperContext {
     public void removeCompleteMeetings() {
         while(meetingQueue.peek() != null
                 && Conversions.toLocalDateTime(meetingQueue.peek().getEndDate())
-                .isAfter(DateTimeSimulator.getCurrentDate())) {
+                .isBefore(DateTimeSimulator.getCurrentDate())) {
             meetingQueue.remove();
         }
     }

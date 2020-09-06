@@ -9,12 +9,12 @@ import hvac.util.df.FindingBehaviour;
 import jade.content.lang.sl.SLCodec;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.domain.FIPANames;
 
 import java.util.ArrayList;
 
 import static hvac.util.Helpers.initTimeFromArgs;
 
-@SuppressWarnings("unused")
 public class RoomCoordinatorAgent extends Agent {
     private RoomContext roomContext;
     private ArrayList<Integer> Ids;
@@ -24,7 +24,8 @@ public class RoomCoordinatorAgent extends Agent {
     @Override
     protected void setup() {
         if(!initTimeFromArgs(this, this::usage)) return;
-        getContentManager().registerLanguage(new SLCodec());
+        getContentManager().registerLanguage(new SLCodec(),
+                FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(MeetingOntology.getInstance());
         roomContext = getContext();
         if(roomContext == null) {
@@ -63,7 +64,9 @@ public class RoomCoordinatorAgent extends Agent {
                 upkeeperDescriptor->{
                     newRoomContext.setMyRoomUpkeeper(upkeeperDescriptor.getName());
                     processRoom();}));
-
+        //uncomment this to test coordinator-upkeeper communication
+        //if(myRoomId == 1) newRoomContext.addMeeting(new Meeting("abc", Conversions.toDate(DateTimeSimulator.getCurrentDate().plusMinutes(40)),
+        //        Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(3)),3, 300.0f));
         return newRoomContext;
     }
 

@@ -2,7 +2,7 @@ package hvac.roomupkeeper;
 
 import hvac.ontologies.meeting.MantainConditions;
 import hvac.ontologies.meeting.Meeting;
-import hvac.ontologies.roomclimate.RoomClimateOntology;
+import hvac.ontologies.meeting.MeetingOntology;
 import hvac.util.Conversions;
 import jade.content.lang.Codec;
 import jade.content.onto.OntologyException;
@@ -33,6 +33,6 @@ public class RoomUpkeeperAgentMessenger {
     public static ACLMessage prepareMantainConditions(List<Meeting> conditions, Agent myAgent, AID roomUpkeeperAgent)
             throws Codec.CodecException, OntologyException {
         MantainConditions mantainConditions = new MantainConditions(Conversions.toJadeList(conditions));
-        return createActionMessage(myAgent, roomUpkeeperAgent, mantainConditions, RoomClimateOntology.getInstance());
+        return createActionMessage(myAgent, roomUpkeeperAgent, mantainConditions, MeetingOntology.getInstance());
     }
 }

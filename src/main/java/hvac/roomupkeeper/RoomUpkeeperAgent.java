@@ -5,6 +5,7 @@ import hvac.ontologies.meeting.MeetingOntology;
 import hvac.ontologies.roomclimate.RoomClimateOntology;
 import hvac.ontologies.weather.WeatherOntology;
 import hvac.roomupkeeper.behaviours.ClimateUpkeepingBehaviour;
+import hvac.roomupkeeper.behaviours.ConditionsReceivingBehaviour;
 import hvac.util.df.DfHelpers;
 import hvac.util.df.FindingBehaviour;
 import jade.content.lang.sl.SLCodec;
@@ -40,6 +41,7 @@ public class RoomUpkeeperAgent extends Agent {
                 context.setWeatherForecaster(forecasterDescriptor.getName());
                 context.getLogger().setAgentName("room upkeeper (" + context.getMyRoomId() + ")");
                 addBehaviour(new ClimateUpkeepingBehaviour(this, context));
+                addBehaviour(new ConditionsReceivingBehaviour(this, context));
             }));
         }));
     }

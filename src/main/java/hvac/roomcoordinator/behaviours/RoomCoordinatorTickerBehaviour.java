@@ -58,10 +58,12 @@ public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
                 myAgent.send(msg);
                 step = Step.AWAITING_UPKEEPER_RESPONSE;
                 pendingMeetingsInUpkeeper = incomingMeetings;
-                reset(0);
+                reset(1);
             } catch (Codec.CodecException | OntologyException e) {
                 e.printStackTrace();
             }
+        } else {
+            reset(standardPeriod);
         }
     }
 

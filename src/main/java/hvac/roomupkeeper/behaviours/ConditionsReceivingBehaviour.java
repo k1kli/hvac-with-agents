@@ -1,5 +1,6 @@
 package hvac.roomupkeeper.behaviours;
 
+import com.google.common.base.Joiner;
 import hvac.ontologies.meeting.MantainConditions;
 import hvac.ontologies.meeting.Meeting;
 import hvac.ontologies.meeting.MeetingOntology;
@@ -39,9 +40,13 @@ public class ConditionsReceivingBehaviour extends CyclicBehaviour {
                 try {
                     processRequest(msg);
                 } catch (Codec.CodecException | OntologyException e) {
+                    context.getLogger().log("message not understood: "
+                            + msg + ", exception: " + e.getMessage());
                     replyNotUnderstood(msg);
                 }
             } else {
+                context.getLogger().log("message not understood: "
+                        + msg + ", not a request");
                 replyNotUnderstood(msg);
             }
         } else {
@@ -61,14 +66,26 @@ public class ConditionsReceivingBehaviour extends CyclicBehaviour {
                     if(Conversions.toLocalDateTime(conditions.get(i).getEndDate())
                             .isAfter(Conversions.toLocalDateTime(conditions.get(i+1).getStartDate()))) {
                         replyRefuse(msg);
+                        context.getLogger().log("refused to mantain conditions: "
+                                + Joiner.on(", ").join(conditions)+", periods not mutually exclusive");
                         return;
                     }
                 }
+                replyAgree(msg);
+                context.getLogger().log("agreed to mantain conditions: "
+                        + Joiner.on(", ").join(conditions));
                 context.setMeetingQueue(conditions);
                 return;
             }
         }
+        context.getLogger().log("message not understood: " + msg);
         replyNotUnderstood(msg);
+    }
+
+    private void replyAgree(ACLMessage msg) {
+        ACLMessage reply = msg.createReply();
+        reply.setPerformative(ACLMessage.AGREE);
+        myAgent.send(reply);
     }
 
     private void replyRefuse(ACLMessage msg) {

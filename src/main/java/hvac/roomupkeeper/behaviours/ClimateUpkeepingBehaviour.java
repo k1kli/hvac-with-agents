@@ -83,7 +83,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
 
     private void initStep() {
         if (context.getNextMeeting() == null) {
-            block();
+            block(1000);
             return;
         }
         decideNextStep();

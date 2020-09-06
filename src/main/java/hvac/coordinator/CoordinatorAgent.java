@@ -6,8 +6,6 @@ import hvac.calendar.CalendarWrapper;
 import hvac.coordinator.behaviours.MeetingUpdatingBehaviour;
 import hvac.database.Connection;
 import hvac.ontologies.meeting.MeetingOntology;
-import hvac.roomcoordinator.RoomCoordinatorAgent;
-import hvac.roomupkeeper.RoomUpkeeperAgent;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomLink;
 import hvac.simulation.rooms.RoomMap;
@@ -16,6 +14,7 @@ import hvac.util.df.DfHelpers;
 import jade.content.lang.sl.SLCodec;
 import jade.core.Runtime;
 import jade.core.*;
+import jade.domain.FIPANames;
 import jade.wrapper.AgentContainer;
 
 import java.util.ArrayList;
@@ -30,7 +29,7 @@ public class CoordinatorAgent extends Agent {
     CoordinatorContext context = new CoordinatorContext();
     @Override
     protected void setup() {
-        getContentManager().registerLanguage(new SLCodec());
+        getContentManager().registerLanguage(new SLCodec(), FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(MeetingOntology.getInstance());
         context.getLogger().setAgentName("coordinator");
         if(!initTimeFromArgs(this, this::usage)) return;
@@ -66,11 +65,11 @@ public class CoordinatorAgent extends Agent {
             }
             try {
                 newContainer.createNewAgent("room-coordinator-" + room.getId(),
-                        RoomCoordinatorAgent.class.getCanonicalName(),
-                        new Object[]{room.getId(), getAID(), myNeighboursIds, myWalls}).start();
+                        "hvac.roomcoordinator.RoomCoordinatorAgent",
+                        new Object[]{getArguments()[0], getArguments()[1], room.getId(), getAID(), myNeighboursIds, myWalls}).start();
 
                 newContainer.createNewAgent("upkeeper-" + room.getId(),
-                        RoomUpkeeperAgent.class.getCanonicalName(),
+                        "hvac.roomupkeeper.RoomUpkeeperAgent",
                         new Object[]{getArguments()[0], getArguments()[1], room.getId(), room.getArea()}).start();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -79,7 +78,7 @@ public class CoordinatorAgent extends Agent {
                     new AID("room-coordinator-" + room.getId() + "@" + newContainer.getPlatformName(),AID.ISGUID));
         }
 
-        context.getLogger().log("Deployed all coordinators and upkeepers");
+        context.getLogger().log("Deployed all room coordinators and upkeepers");
     }
 
     private void usage(String err) {

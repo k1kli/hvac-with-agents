@@ -63,7 +63,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
         roomStatuses.removeIf(status -> status.getTime()
                 .isBefore(DateTimeSimulator.getCurrentDate().minusSeconds(CLIMATE_FORGET_TIME_SECONDS)));
         //current meeting is over - delete it
-        if (context.getNextMeeting() != null && Conversions.toLocalDateTime(context.getNextMeeting().getEndDate())
+        if (context.getNextMeeting() != null && context.getNextMeeting().getLocalEndDate()
                 .isBefore(DateTimeSimulator.getCurrentDate())) {
             context.setNextMeeting(null);
         }
@@ -263,7 +263,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
             return (context.getNextMeeting().getTemperature()
                     - currentClimate.getTemperature()) / ChronoUnit.SECONDS.between(
                     DateTimeSimulator.getCurrentDate(),
-                    Conversions.toLocalDateTime(context.getNextMeeting().getStartDate()));
+                    context.getNextMeeting().getLocalStartDate());
         }
     }
 
@@ -278,7 +278,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
             return (context.getRelativeHumidityToMaintain()
                     - currentClimate.getRelativeHumidity()) / ChronoUnit.SECONDS.between(
                     DateTimeSimulator.getCurrentDate(),
-                    Conversions.toLocalDateTime(context.getNextMeeting().getStartDate()));
+                    context.getNextMeeting().getLocalStartDate());
         }
     }
 
@@ -419,12 +419,9 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     }
 
     private boolean meetingInProgress() {
-        return Conversions.toLocalDateTime(
-                context.getNextMeeting().getStartDate())
-                .isBefore(DateTimeSimulator.getCurrentDate())
-                && Conversions.toLocalDateTime(
-                context.getNextMeeting().getEndDate())
-                .isAfter(DateTimeSimulator.getCurrentDate());
+        return context.getNextMeeting().getLocalStartDate().isBefore(DateTimeSimulator.getCurrentDate())
+                &&
+                context.getNextMeeting().getLocalEndDate().isAfter(DateTimeSimulator.getCurrentDate());
     }
 
     private void enterMachineryInfoWaitForResponseStep() {

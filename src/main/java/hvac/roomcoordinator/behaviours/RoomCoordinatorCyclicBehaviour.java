@@ -3,6 +3,7 @@ package hvac.roomcoordinator.behaviours;
 import hvac.ontologies.meeting.Request;
 import hvac.ontologies.meeting.RequestStatus;
 import hvac.roomcoordinator.RoomContext;
+import jade.content.onto.basic.Action;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -67,13 +68,15 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
             return;
         }
         ACLMessage requestForecast = msg.createReply();
+        requestForecast.setPerformative(ACLMessage.REQUEST);
+        requestForecast.setConversationId(requestForecast.getConversationId() + "-request-" + roomContext.getMyRoomId());
         requestForecast.clearAllReceiver();
         for (AID neighbour:roomContext.getMyNeighbours().keySet()){
             requestForecast.addReceiver(neighbour);
         }
         request.setStatus(RequestStatus.FORECAST);
-        fillAndSend(requestForecast,request);
         roomContext.newForecastEntry(request.getMeeting());
+        fillAndSend(requestForecast, request);
     }
 
     private void handleRequest(ACLMessage msg){
@@ -103,9 +106,10 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
         request.getMeeting().setTemperature(roomContext.computeForecast(request.getMeeting().getMeetingID()));
         roomContext.removeForecastEntry(request.getMeeting().getMeetingID());
         ACLMessage reply = msg.createReply();
-        msg.setPerformative(ACLMessage.PROPOSE);
-        msg.clearAllReceiver();
-        msg.addReceiver(roomContext.getCoordinator());
+        reply.setPerformative(ACLMessage.PROPOSE);
+        reply.setConversationId(request.getMeeting().getMeetingID());
+        reply.clearAllReceiver();
+        reply.addReceiver(roomContext.getCoordinator());
         request.setStatus(RequestStatus.OFFER);
         fillAndSend(reply, request);
     }
@@ -152,7 +156,7 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
     private Request extractRequest(ACLMessage msg){
         Request request = null;
         try {
-            request = (Request) myAgent.getContentManager().extractContent(msg);
+            request = (Request) ((Action) myAgent.getContentManager().extractContent(msg)).getAction();
         } catch (Exception e){e.printStackTrace();}
         if (null == request || null == request.getMeeting()){
             notUnderstood(msg);
@@ -163,8 +167,12 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
 
     private void fillAndSend(ACLMessage msg, Request request){
         try {
-            myAgent.getContentManager().fillContent(msg, request);
+            myAgent.getContentManager().fillContent(msg, new Action(myAgent.getAID(), request));
         } catch (Exception e){e.printStackTrace();}
+        msg.clearAllReplyTo();
+        msg.setInReplyTo("");
+        msg.setReplyWith("");
+        roomContext.getLogger().log("Message sent: " + msg);
         myAgent.send(msg);
     }
 }

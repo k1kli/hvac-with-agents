@@ -10,15 +10,26 @@ import java.util.Set;
 
 public class CoordinatorContext {
     private final Map<Integer, Set<AID>> rooms = new HashMap<>();
+    private int maxSeats = 0;
     private final HashMap<String, Meeting> meetingsToAssign = new HashMap<>();
     private final HashMap<String, Meeting> assignedMeetings = new HashMap<>();
     private final Logger logger = new Logger();
 
     public void addRoom(int seats, AID roomAID){
         if (! rooms.containsKey(seats)){
+            if (maxSeats < seats){
+                maxSeats = seats;
+            }
             rooms.put(seats, new HashSet<>());
         }
         rooms.getOrDefault(seats,null).add(roomAID);
+    }
+
+    public Set<AID> getRoomsByNSeats(int seats){
+        if (! rooms.containsKey(seats) && seats < maxSeats){
+            return  getRoomsByNSeats(seats + 1);
+        }
+        return rooms.getOrDefault(seats, null);
     }
 
     public HashMap<String, Meeting> getMeetingsToAssign() {

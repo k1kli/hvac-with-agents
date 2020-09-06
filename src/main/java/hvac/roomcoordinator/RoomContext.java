@@ -5,7 +5,12 @@ import hvac.simulation.rooms.RoomWall;
 import hvac.util.Logger;
 import jade.core.AID;
 
-import java.util.*;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
 
 public class RoomContext {
     private static final float defaultTemperature = 21;
@@ -63,8 +68,8 @@ public class RoomContext {
         return meetingsQueue.peek();
     }
 
-    public Meeting checkMeetings(Date date){
-        if (meetingsQueue.isEmpty() || 0 < meetingsQueue.peek().getStartDate().compareTo(date)){
+    public Meeting checkMeetings(LocalDateTime date){
+        if (meetingsQueue.isEmpty() || 0 < meetingsQueue.peek().getLocalStartDate().compareTo(date)){
             return null;
         }
         return meetingsQueue.peek();
@@ -81,7 +86,7 @@ public class RoomContext {
     public float estimateTemperatureForNeighbour(Meeting meeting){
         float estimatedTemperature = defaultTemperature;
         long timeBusy = 0;
-        long meetingDuration = meeting.getEndDate().getTime() - meeting.getStartDate().getTime();
+        long meetingDuration = Duration.between(meeting.getLocalEndDate(), meeting.getLocalStartDate()).toMillis();
         for (Meeting plannedMeeting:meetingsQueue){
             long timeOverlapping = plannedMeeting.millisecondsOverlapping(meeting);
             if (timeOverlapping > 0) {
@@ -94,7 +99,7 @@ public class RoomContext {
 
     public void removeMeeting(String ID){
         if (null != getCurrentMeeting() && ID.equals(getCurrentMeeting().getMeetingID())){
-            currentMeeting.setEndDate(new Date(Long.MIN_VALUE));
+            currentMeeting.setLocalEndDate(LocalDateTime.MIN);
         }
         for (Meeting meeting:meetingsQueue){
             if (meeting.getMeetingID().equals(ID)){

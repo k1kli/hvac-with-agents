@@ -6,7 +6,6 @@ import hvac.ontologies.roomclimate.RoomClimateOntology;
 import hvac.ontologies.weather.WeatherOntology;
 import hvac.roomupkeeper.behaviours.ClimateUpkeepingBehaviour;
 import hvac.time.DateTimeSimulator;
-import hvac.util.Conversions;
 import hvac.util.df.DfHelpers;
 import hvac.util.df.FindingBehaviour;
 import jade.content.lang.sl.SLCodec;
@@ -44,8 +43,8 @@ public class RoomUpkeeperAgent extends Agent {
                 addBehaviour(new ClimateUpkeepingBehaviour(this, context));
                 context.setNextMeeting(new Meeting(
                         "abc",
-                        Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(2)),
-                        Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(4)),
+                        DateTimeSimulator.getCurrentDate().plusHours(2),
+                        DateTimeSimulator.getCurrentDate().plusHours(4),
                         5,
                         300.0f));
             }));

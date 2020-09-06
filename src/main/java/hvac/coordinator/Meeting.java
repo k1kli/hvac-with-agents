@@ -10,13 +10,11 @@ public class Meeting {
     private String id;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
-    private String roomId;
-
+    private int roomId;
 
     Set<Employee> employees;
 
-
-    public Meeting(String id, LocalDateTime startDate, LocalDateTime endDate, String roomId, Set<Employee> employees) {
+    public Meeting(String id, LocalDateTime startDate, LocalDateTime endDate, int roomId, Set<Employee> employees) {
         //for application use
         this.id = id;
         this.startDate = startDate;
@@ -29,6 +27,7 @@ public class Meeting {
         return id;
     }
 
+    @SuppressWarnings("unused")
     private void setId(String id) {
         this.id = id;
     }
@@ -37,6 +36,7 @@ public class Meeting {
         return startDate;
     }
 
+    @SuppressWarnings("unused")
     public void setStartDate(LocalDateTime startDate) {
         this.startDate = startDate;
     }
@@ -45,15 +45,16 @@ public class Meeting {
         return endDate;
     }
 
+    @SuppressWarnings("unused")
     public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
     }
 
-    public String getRoomId() {
+    public int getRoomId() {
         return roomId;
     }
 
-    public void setRoomId(String roomId) {
+    public void setRoomId(int roomId) {
         this.roomId = roomId;
     }
 
@@ -61,6 +62,7 @@ public class Meeting {
         return employees;
     }
 
+    @SuppressWarnings("unused")
     public void setEmployees(Set<Employee> employees) {
         this.employees = employees;
     }

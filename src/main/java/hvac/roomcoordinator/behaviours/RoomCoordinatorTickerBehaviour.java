@@ -5,12 +5,14 @@ import hvac.ontologies.meeting.MeetingOntology;
 import hvac.ontologies.meeting.Request;
 import hvac.ontologies.meeting.RequestStatus;
 import hvac.roomcoordinator.RoomContext;
-import jade.content.lang.sl.SLCodec;
+import hvac.time.DateTimeSimulator;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 
-import java.util.Date;
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
     private final RoomContext roomContext;
@@ -22,18 +24,19 @@ public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
 
     @Override
     protected void onTick() {
+        LocalDateTime now = DateTimeSimulator.getCurrentDate();
         if (null == roomContext.getCurrentMeeting()){
-            Meeting meeting = roomContext.checkMeetings(new Date());
+            Meeting meeting = roomContext.checkMeetings(now);
             if (null != meeting){
                 roomContext.setCurrentMeeting(meeting);
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                 Request request = new Request(roomContext.getCurrentMeeting(), RequestStatus.EXECUTE);
                 sendUpdateToUpkeeper(msg, request);
-                this.reset(meeting.getEndDate().getTime() - new Date().getTime());
+                this.reset(Duration.between(meeting.getLocalEndDate(), now).toMillis());
             }
             else{
                 if (null != roomContext.peekMeeting()){
-                    this.reset(roomContext.peekMeeting().getStartDate().getTime() - new Date().getTime());
+                    this.reset(Duration.between(roomContext.peekMeeting().getLocalStartDate(), now).toMillis());
                 }
                 else{
                     this.reset(Long.MAX_VALUE);
@@ -41,7 +44,7 @@ public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
             }
         }
         else{
-            if (roomContext.getCurrentMeeting().getEndDate().before(new Date())){
+            if (roomContext.getCurrentMeeting().getLocalEndDate().compareTo(now) < 0){
                 Meeting currentMeeting = roomContext.getCurrentMeeting();
                 ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
                 Request request = new Request(currentMeeting, RequestStatus.FINISHED);
@@ -65,7 +68,7 @@ public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
 
     private void sendUpdateToUpkeeper(ACLMessage msg, Request request){
         msg.setConversationId(roomContext.getCurrentMeeting().getMeetingID());
-        msg.setLanguage(new SLCodec().getName());
+        msg.setLanguage(FIPANames.ContentLanguage.FIPA_SL0);
         msg.setOntology(MeetingOntology.getInstance().getName());
         msg.addReceiver(roomContext.getMyRoomUpkeeper());
         fillAndSend(msg, request);

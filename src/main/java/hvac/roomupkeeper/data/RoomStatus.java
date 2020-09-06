@@ -31,6 +31,7 @@ public class RoomStatus {
         return temperatureSlope;
     }
 
+    @SuppressWarnings("unused")
     public void setTemperatureSlope(float temperatureSlope) {
         this.temperatureSlope = temperatureSlope;
     }
@@ -39,6 +40,7 @@ public class RoomStatus {
         return heatingPower;
     }
 
+    @SuppressWarnings("unused")
     public void setHeatingPower(float heatingPower) {
         this.heatingPower = heatingPower;
     }
@@ -55,6 +57,7 @@ public class RoomStatus {
         return humiditySlope;
     }
 
+    @SuppressWarnings("unused")
     public void setHumiditySlope(float humiditySlope) {
         this.humiditySlope = humiditySlope;
     }
@@ -63,6 +66,7 @@ public class RoomStatus {
         return airExchangedPerSecond;
     }
 
+    @SuppressWarnings("unused")
     public void setAirExchangedPerSecond(float airExchangedPerSecond) {
         this.airExchangedPerSecond = airExchangedPerSecond;
     }

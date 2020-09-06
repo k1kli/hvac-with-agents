@@ -1,20 +1,23 @@
 package hvac.roomupkeeper;
 
 import hvac.ontologies.meeting.Meeting;
+import hvac.time.DateTimeSimulator;
+import hvac.util.Conversions;
 import hvac.util.Logger;
 import jade.core.AID;
+
+import java.util.ArrayDeque;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Queue;
+import java.util.stream.Collectors;
 
 public class RoomUpkeeperContext {
     private AID weatherForecaster;
     private AID simulationAgent;
     private final int myRoomId;
 
-    /**
-     * Next meeting that will be held in this room
-     * room will be accomodated to its required conditions
-     * is null if no new meeting is scheduled
-     */
-    private Meeting nextMeeting;
+    private Queue<Meeting> meetingQueue;
     private static final float relativeHumidityToMaintain = 0.5f;
     private final float myRoomArea;
 
@@ -25,15 +28,34 @@ public class RoomUpkeeperContext {
     public RoomUpkeeperContext(int myRoomId, float myRoomArea) {
         this.myRoomId = myRoomId;
         this.myRoomArea = myRoomArea;
-        this.nextMeeting = null;
+        this.meetingQueue = new ArrayDeque<>();
     }
 
+
+    /**
+     * Next meeting that will be held in this room
+     * room will be accomodated to its required conditions
+     * is null if no new meeting is scheduled
+     */
     public Meeting getNextMeeting() {
-        return nextMeeting;
+        return meetingQueue.peek();
     }
 
-    public void setNextMeeting(Meeting nextMeeting) {
-        this.nextMeeting = nextMeeting;
+    /**
+     * Removes all meetings for which end date is in the past
+     */
+    public void removeCompleteMeetings() {
+        while(meetingQueue.peek() != null
+                && Conversions.toLocalDateTime(meetingQueue.peek().getEndDate())
+                .isBefore(DateTimeSimulator.getCurrentDate())) {
+            meetingQueue.remove();
+        }
+    }
+
+    public void setMeetingQueue(List<Meeting> meetings) {
+        meetingQueue = meetings.stream()
+                .sorted(Comparator.comparing(Meeting::getStartDate))
+                .collect(Collectors.toCollection(ArrayDeque::new));
     }
 
     public AID getWeatherForecaster() {
@@ -53,7 +75,7 @@ public class RoomUpkeeperContext {
     }
 
     public float getRequiredVentilation() {
-        return (nextMeeting != null ? perPersonRequiredVentilation*nextMeeting.getPeopleInRoom() : 0.0f)
+        return (getNextMeeting() != null ? perPersonRequiredVentilation*getNextMeeting().getPeopleInRoom() : 0.0f)
                 + perM2RequiredVentilation * myRoomArea;
     }
 

@@ -4,6 +4,7 @@ import jade.content.Concept;
 
 import java.util.Date;
 
+@SuppressWarnings("unused")
 public class Meeting implements Concept, Comparable<Meeting> {
     private String meetingID;
     private Date startDate;
@@ -11,12 +12,26 @@ public class Meeting implements Concept, Comparable<Meeting> {
     private int peopleInRoom;
     private float temperature;
 
+    public Meeting() {}
+
     public Meeting(String meetingID, Date startDate, Date endDate, int peopleInRoom, float temperature) {
         this.meetingID = meetingID;
         this.startDate = startDate;
         this.endDate = endDate;
         this.peopleInRoom = peopleInRoom;
         this.temperature = temperature;
+    }
+
+    public void setMeetingID(String meetingID) {
+        this.meetingID = meetingID;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public void setPeopleInRoom(int peopleInRoom) {
+        this.peopleInRoom = peopleInRoom;
     }
 
     public String getMeetingID() {
@@ -35,7 +50,6 @@ public class Meeting implements Concept, Comparable<Meeting> {
         this.endDate = endDate;
     }
 
-    @SuppressWarnings("unused")
     public int getPeopleInRoom() {
         return peopleInRoom;
     }
@@ -62,5 +76,16 @@ public class Meeting implements Concept, Comparable<Meeting> {
     @Override
     public int compareTo(Meeting emp) {
         return this.getStartDate().compareTo(emp.getStartDate());
+    }
+
+    @Override
+    public String toString() {
+        return "Meeting{" +
+                "meetingID='" + meetingID + '\'' +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", peopleInRoom=" + peopleInRoom +
+                ", temperature=" + temperature +
+                '}';
     }
 }

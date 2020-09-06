@@ -2,9 +2,11 @@ package hvac.roomcoordinator;
 
 import hvac.ontologies.meeting.Meeting;
 import hvac.simulation.rooms.RoomWall;
+import hvac.util.Conversions;
 import hvac.util.Logger;
 import jade.core.AID;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class RoomContext {
@@ -13,7 +15,6 @@ public class RoomContext {
     private final AID coordinator;
     private AID myRoomUpkeeper;
     private final HashMap<AID, RoomWall> myNeighbours = new HashMap<>();
-    private Meeting currentMeeting;
     private final PriorityQueue<Meeting> meetingsQueue = new PriorityQueue<>();
     private final Map<String, AbstractMap.SimpleEntry<Meeting, Map<AID, Float>>> neighboursForecastStatus = new HashMap<>();
     private final Logger logger = new Logger();
@@ -47,27 +48,18 @@ public class RoomContext {
         myNeighbours.put(key, value);
     }
 
-    public Meeting getCurrentMeeting() {
-        return currentMeeting;
-    }
-
-    public void setCurrentMeeting(Meeting currentMeeting) {
-        this.currentMeeting = currentMeeting;
-    }
-
     public void addMeeting(Meeting meeting){
         meetingsQueue.add(meeting);
     }
 
-    public Meeting peekMeeting(){
-        return meetingsQueue.peek();
-    }
-
-    public Meeting checkMeetings(Date date){
-        if (meetingsQueue.isEmpty() || 0 < meetingsQueue.peek().getStartDate().compareTo(date)){
-            return null;
+    public List<Meeting> getMeetingsStartingBefore(LocalDateTime date){
+        List<Meeting> result = new ArrayList<>();
+        for (Meeting meeting : meetingsQueue) {
+            if (Conversions.toLocalDateTime(meeting.getStartDate()).isAfter(date))
+                break;
+            result.add(meeting);
         }
-        return meetingsQueue.peek();
+        return result;
     }
 
     public Logger getLogger() {
@@ -93,9 +85,6 @@ public class RoomContext {
     }
 
     public void removeMeeting(String ID){
-        if (null != getCurrentMeeting() && ID.equals(getCurrentMeeting().getMeetingID())){
-            currentMeeting.setEndDate(new Date(Long.MIN_VALUE));
-        }
         for (Meeting meeting:meetingsQueue){
             if (meeting.getMeetingID().equals(ID)){
                 meetingsQueue.remove(meeting);

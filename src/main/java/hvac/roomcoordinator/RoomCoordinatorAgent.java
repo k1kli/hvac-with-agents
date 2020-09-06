@@ -9,10 +9,12 @@ import hvac.util.df.FindingBehaviour;
 import jade.content.lang.sl.SLCodec;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.domain.FIPANames;
 
 import java.util.ArrayList;
 
-@SuppressWarnings("unused")
+import static hvac.util.Helpers.initTimeFromArgs;
+
 public class RoomCoordinatorAgent extends Agent {
     private RoomContext roomContext;
     private ArrayList<Integer> Ids;
@@ -21,7 +23,9 @@ public class RoomCoordinatorAgent extends Agent {
 
     @Override
     protected void setup() {
-        getContentManager().registerLanguage(new SLCodec());
+        if(!initTimeFromArgs(this, this::usage)) return;
+        getContentManager().registerLanguage(new SLCodec(),
+                FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(MeetingOntology.getInstance());
         roomContext = getContext();
         if(roomContext == null) {
@@ -33,7 +37,7 @@ public class RoomCoordinatorAgent extends Agent {
     private RoomContext getContext() {
         int myRoomId;
         try {
-            myRoomId = Integer.parseInt(getArguments()[0].toString());
+            myRoomId = Integer.parseInt(getArguments()[2].toString());
         } catch (NumberFormatException e) {
             usage("room Id is not valid");
             return null;
@@ -42,16 +46,16 @@ public class RoomCoordinatorAgent extends Agent {
             usage("room cannot be registered in DF");
             return null;
         }
-        RoomContext newRoomContext = new RoomContext(myRoomId, (AID) getArguments()[1]);
+        RoomContext newRoomContext = new RoomContext(myRoomId, (AID) getArguments()[3]);
         newRoomContext.getLogger().setAgentName("room coordinator (" + newRoomContext.getMyRoomId() + ")");
         try {
-            Ids = (ArrayList<Integer>) getArguments()[2];
+            Ids = (ArrayList<Integer>) getArguments()[4];
         } catch (Exception e) {
             usage("room ids list is not valid");
             return null;
         }
         try {
-            RoomWalls = (ArrayList<RoomWall>) getArguments()[3];
+            RoomWalls = (ArrayList<RoomWall>) getArguments()[5];
         } catch (Exception e) {
             usage("room neighbour list is not valid");
             return null;
@@ -60,7 +64,9 @@ public class RoomCoordinatorAgent extends Agent {
                 upkeeperDescriptor->{
                     newRoomContext.setMyRoomUpkeeper(upkeeperDescriptor.getName());
                     processRoom();}));
-
+        //uncomment this to test coordinator-upkeeper communication
+        //if(myRoomId == 1) newRoomContext.addMeeting(new Meeting("abc", Conversions.toDate(DateTimeSimulator.getCurrentDate().plusMinutes(40)),
+        //        Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(3)),3, 300.0f));
         return newRoomContext;
     }
 
@@ -83,6 +89,8 @@ public class RoomCoordinatorAgent extends Agent {
     private void usage(String err) {
         System.err.println("-------- Room Coordinator agent usage --------------");
         System.err.println("simulation:hvac.roomcoordinator.RoomCoordinatorAgent(RoomId, CoordinatorAID, NeighboursIds, RoomWalls)");
+        System.err.println("timescale - floating point value indicating speed of passing time");
+        System.err.println("Date from which to start simulating \"yyyy-MM-dd HH:mm:ss\"");
         System.err.println("RoomId - integer uniquely identifying the room of this agent");
         System.err.println("CoordinatorAID - AID of Coordinator");
         System.err.println("NeighboursIds - array of neighbours' Ids");

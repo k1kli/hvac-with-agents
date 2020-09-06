@@ -1,6 +1,7 @@
 package hvac.coordinator;
 
 import hvac.database.entities.Employee;
+import jade.core.AID;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -10,16 +11,16 @@ public class Meeting {
     private String id;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
-    private int roomId;
+    private AID roomCoordinator;
 
     Set<Employee> employees;
 
-    public Meeting(String id, LocalDateTime startDate, LocalDateTime endDate, int roomId, Set<Employee> employees) {
+    public Meeting(String id, LocalDateTime startDate, LocalDateTime endDate, AID roomCoordinator, Set<Employee> employees) {
         //for application use
         this.id = id;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.roomId = roomId;
+        this.roomCoordinator = roomCoordinator;
         this.employees = new HashSet<>(employees);
     }
 
@@ -50,12 +51,12 @@ public class Meeting {
         this.endDate = endDate;
     }
 
-    public int getRoomId() {
-        return roomId;
+    public AID getRoomCoordinator() {
+        return roomCoordinator;
     }
 
-    public void setRoomId(int roomId) {
-        this.roomId = roomId;
+    public void setRoomCoordinator(AID roomCoordinator) {
+        this.roomCoordinator = roomCoordinator;
     }
 
     public Set<Employee> getEmployees() {

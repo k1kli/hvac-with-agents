@@ -9,16 +9,9 @@ import hvac.calendar.CalendarException;
 import hvac.coordinator.CoordinatorContext;
 import hvac.coordinator.Meeting;
 import hvac.database.entities.Employee;
-import hvac.ontologies.meeting.MeetingOntology;
-import hvac.ontologies.meeting.Request;
-import hvac.ontologies.meeting.RequestStatus;
 import hvac.time.DateTimeSimulator;
-import jade.content.onto.basic.Action;
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.FIPANames;
-import jade.lang.acl.ACLMessage;
 
 import java.sql.Date;
 import java.time.Instant;
@@ -63,7 +56,9 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
             for(Employee emp : meeting.getEmployees())
                 System.out.println("    -"+emp.getAlias());
         }
-        sendCFPs(meetingsToAdd);
+        for(Meeting meeting: meetingsToAdd) {
+            myAgent.addBehaviour(new MeetingAssignerBehaviour(myAgent, meeting, context));
+        }
     }
 
     public List<Event> getCalendarEvents() throws CalendarException
@@ -108,7 +103,7 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
                 event.getId(),
                 convertToLocal.apply(event.getStart()),
                 convertToLocal.apply(event.getEnd()),
-                0,
+                null,
                 employeeSet);
     }
 
@@ -121,29 +116,5 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
                         !context.getAssignedMeetings().containsKey(m.getId()) &&
                         !context.getMeetingsToAssign().containsKey(m.getId()))
                 .collect(Collectors.toList());
-    }
-
-    public void sendCFPs(List<Meeting> meetingsToAdd){
-        for(Meeting meeting: meetingsToAdd){
-            Set<AID> possibleRooms = context.getRoomsByNSeats(meeting.getEmployees().size());
-            if (null == possibleRooms){
-                context.getLogger().log("No rooms with " + meeting.getEmployees().size() + " or greater number of seats");
-                return;
-            }
-            ACLMessage msg = new ACLMessage(ACLMessage.CFP);
-            msg.setConversationId(meeting.getId());
-            for (AID receiver  : possibleRooms){
-                msg.addReceiver(receiver);
-            }
-            Request request = new Request(new hvac.ontologies.meeting.Meeting(meeting), RequestStatus.OFFER);
-            request.setStatus(RequestStatus.OFFER);
-            msg.setLanguage(FIPANames.ContentLanguage.FIPA_SL0);
-            msg.setOntology(MeetingOntology.getInstance().getName());
-            try {
-                myAgent.getContentManager().fillContent(msg, new Action(myAgent.getAID(), request));
-            } catch (Exception e){e.printStackTrace();}
-            context.getLogger().log("Sent CFP for meeting " + meeting.getId());
-            myAgent.send(msg);
-        }
     }
 }

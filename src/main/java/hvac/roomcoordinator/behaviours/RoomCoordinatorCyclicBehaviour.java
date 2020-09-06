@@ -69,7 +69,7 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
         }
         ACLMessage requestForecast = msg.createReply();
         requestForecast.setPerformative(ACLMessage.REQUEST);
-        requestForecast.setConversationId(requestForecast.getConversationId() + "-request-" + roomContext.getMyRoomId());
+        requestForecast.setConversationId(requestForecast.getConversationId() + "-req-room-" + roomContext.getMyRoomId());
         requestForecast.clearAllReceiver();
         for (AID neighbour:roomContext.getMyNeighbours().keySet()){
             requestForecast.addReceiver(neighbour);
@@ -130,7 +130,7 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
             request.setStatus(RequestStatus.FAILED);
         }
         fillAndSend(reply, request);
-        tickerBehaviour.reset(0);
+        tickerBehaviour.reset(1);
     }
 
     private void handleCancel(ACLMessage msg){
@@ -143,10 +143,11 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
         reply.setPerformative(ACLMessage.CONFIRM);
         request.setStatus(RequestStatus.CANCELLED);
         fillAndSend(reply, request);
-        tickerBehaviour.reset(0);
+        tickerBehaviour.reset(1);
     }
 
     private void notUnderstood(ACLMessage msg){
+        roomContext.getLogger().log("Not understood " + msg);
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
         reply.setContent(msg.getContent());

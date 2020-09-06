@@ -36,7 +36,7 @@ public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
             }
             else{
                 if (null != roomContext.peekMeeting()){
-                    this.reset(Duration.between(roomContext.peekMeeting().getLocalStartDate(), now).toMillis());
+                    this.reset(Math.max(Duration.between(roomContext.peekMeeting().getLocalStartDate(), now).toMillis(),1));
                 }
                 else{
                     this.reset(Long.MAX_VALUE);
@@ -51,7 +51,7 @@ public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
                 sendUpdateToUpkeeper(msg, request);
                 roomContext.setCurrentMeeting(null);
                 roomContext.removeMeeting(currentMeeting.getMeetingID());
-                this.reset(0);
+                this.reset(1);
             }
             else{
                 this.reset(1000);

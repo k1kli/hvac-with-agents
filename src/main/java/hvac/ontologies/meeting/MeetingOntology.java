@@ -16,16 +16,16 @@ public class MeetingOntology extends Ontology {
     public static final String MEETING_START_DATE = "startDate";
     public static final String MEETING_END_DATE = "endDate";
     public static final String MEETING_PEOPLE = "peopleInRoom";
-    public static final String MEETING_TEMPERATURE = "Temperature";
+    public static final String MEETING_TEMPERATURE = "temperature";
 
-    public static final String REQUEST = "request";
-    public static final String REQUEST_MEETING = "meeting";
-    public static final String REQUEST_STATUS = "status";
+    public static final String REQUEST = "Request";
+    public static final String REQUEST_MEETING = "Meeting";
+    public static final String REQUEST_STATUS = "requestStatus";
 
     public static final String MANTAIN_CONDITIONS = "MantainConditions";
     public static final String MANTAIN_CONDITIONS_CONDITIONS = "conditions";
 
-    private static Ontology theInstance = new MeetingOntology();
+    private static final Ontology theInstance = new MeetingOntology();
 
     public static Ontology getInstance() {return theInstance;}
 
@@ -40,13 +40,10 @@ public class MeetingOntology extends Ontology {
             cs.add(MEETING_PEOPLE, (PrimitiveSchema) getSchema(BasicOntology.INTEGER));
             cs.add(MEETING_TEMPERATURE, (PrimitiveSchema) getSchema(BasicOntology.FLOAT));
 
-            cs = new ConceptSchema(REQUEST_STATUS);
-            add(cs, RequestStatus.class);
-
             AgentActionSchema as = new AgentActionSchema(REQUEST);
             add(as, Request.class);
             as.add(REQUEST_MEETING, (ConceptSchema) getSchema(MEETING));
-            as.add(REQUEST_STATUS, (ConceptSchema) getSchema(REQUEST_STATUS));
+            as.add(REQUEST_STATUS, (PrimitiveSchema) getSchema(BasicOntology.INTEGER));
 
             as = new AgentActionSchema(MANTAIN_CONDITIONS);
             add(as, MantainConditions.class);

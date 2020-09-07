@@ -25,8 +25,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class MeetingUpdatingBehaviour extends TickerBehaviour {
-    private Calendar calendar;
-    private CoordinatorContext context;
+    private final Calendar calendar;
+    private final CoordinatorContext context;
 
     public MeetingUpdatingBehaviour(Agent a, long period, Calendar calendar,
                                     CoordinatorContext context) {
@@ -51,10 +51,13 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
         context.getMeetingsToAssign()
                 .putAll(meetingsToAdd.stream()
                         .collect(Collectors.toMap(Meeting::getId, Function.identity())));
-        for(Meeting meeting : context.getMeetingsToAssign().values()) {
+        for(Meeting meeting : meetingsToAdd) {
             System.out.println(meeting.getId() + " " + meeting.getStartDate() + " " + meeting.getEndDate());
             for(Employee emp : meeting.getEmployees())
                 System.out.println("    -"+emp.getAlias());
+        }
+        for(Meeting meeting: meetingsToAdd) {
+            myAgent.addBehaviour(new MeetingAssignerBehaviour(myAgent, meeting, context));
         }
     }
 
@@ -68,7 +71,8 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
                     TimeZone.getDefault());
             DateTime maxTime = new DateTime(Date.from(now.plusWeeks(1).atZone(ZoneId.systemDefault()).toInstant()),
                     TimeZone.getDefault());
-            Events events = calendar.events().list("primary")
+            //System.out.println("Available calendars: " + calendar.calendarList().list().execute()); // to check the ID of the source calendar
+            Events events = calendar.events().list("ruheb94q1rga1gfonpr949iomc@group.calendar.google.com")
                     .setTimeMin(minTime)
                     .setTimeMax(maxTime)
                     .setOrderBy("startTime")
@@ -100,7 +104,7 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
                 event.getId(),
                 convertToLocal.apply(event.getStart()),
                 convertToLocal.apply(event.getEnd()),
-                event.getId(),
+                null,
                 employeeSet);
     }
 

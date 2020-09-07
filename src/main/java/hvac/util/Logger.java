@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 public class Logger {
     private String agentName = "unnamed agent";
-    private DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     public void log(String msg) {
         System.out.println("[" + DateTimeSimulator.getCurrentDate().format(formatter) + "]"

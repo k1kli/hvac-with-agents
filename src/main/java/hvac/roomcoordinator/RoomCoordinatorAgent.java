@@ -27,6 +27,7 @@ public class RoomCoordinatorAgent extends Agent {
         getContentManager().registerLanguage(new SLCodec(),
                 FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(MeetingOntology.getInstance());
+        if(!initTimeFromArgs(this, this::usage)) return;
         roomContext = getContext();
         if(roomContext == null) {
             doDelete();
@@ -88,7 +89,7 @@ public class RoomCoordinatorAgent extends Agent {
 
     private void usage(String err) {
         System.err.println("-------- Room Coordinator agent usage --------------");
-        System.err.println("simulation:hvac.roomcoordinator.RoomCoordinatorAgent(RoomId, CoordinatorAID, NeighboursIds, RoomWalls)");
+        System.err.println("simulation:hvac.roomcoordinator.RoomCoordinatorAgent(timeScale, start_date, RoomId, CoordinatorAID, NeighboursIds, RoomWalls)");
         System.err.println("timescale - floating point value indicating speed of passing time");
         System.err.println("Date from which to start simulating \"yyyy-MM-dd HH:mm:ss\"");
         System.err.println("RoomId - integer uniquely identifying the room of this agent");

@@ -1,6 +1,7 @@
 package hvac.coordinator;
 
 import hvac.database.entities.Employee;
+import jade.core.AID;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -10,18 +11,16 @@ public class Meeting {
     private String id;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
-    private String roomId;
-
+    private AID roomCoordinator;
 
     Set<Employee> employees;
 
-
-    public Meeting(String id, LocalDateTime startDate, LocalDateTime endDate, String roomId, Set<Employee> employees) {
+    public Meeting(String id, LocalDateTime startDate, LocalDateTime endDate, AID roomCoordinator, Set<Employee> employees) {
         //for application use
         this.id = id;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.roomId = roomId;
+        this.roomCoordinator = roomCoordinator;
         this.employees = new HashSet<>(employees);
     }
 
@@ -29,6 +28,7 @@ public class Meeting {
         return id;
     }
 
+    @SuppressWarnings("unused")
     private void setId(String id) {
         this.id = id;
     }
@@ -37,6 +37,7 @@ public class Meeting {
         return startDate;
     }
 
+    @SuppressWarnings("unused")
     public void setStartDate(LocalDateTime startDate) {
         this.startDate = startDate;
     }
@@ -45,22 +46,25 @@ public class Meeting {
         return endDate;
     }
 
+    @SuppressWarnings("unused")
     public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
     }
 
-    public String getRoomId() {
-        return roomId;
+    @SuppressWarnings("unused")
+    public AID getRoomCoordinator() {
+        return roomCoordinator;
     }
 
-    public void setRoomId(String roomId) {
-        this.roomId = roomId;
+    public void setRoomCoordinator(AID roomCoordinator) {
+        this.roomCoordinator = roomCoordinator;
     }
 
     public Set<Employee> getEmployees() {
         return employees;
     }
 
+    @SuppressWarnings("unused")
     public void setEmployees(Set<Employee> employees) {
         this.employees = employees;
     }

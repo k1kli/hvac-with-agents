@@ -6,6 +6,7 @@ import hvac.util.Conversions;
 import hvac.util.Logger;
 import jade.core.AID;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -73,7 +74,7 @@ public class RoomContext {
     public float estimateTemperatureForNeighbour(Meeting meeting){
         float estimatedTemperature = defaultTemperature;
         long timeBusy = 0;
-        long meetingDuration = meeting.getEndDate().getTime() - meeting.getStartDate().getTime();
+        long meetingDuration = Duration.between(meeting.getLocalEndDate(), meeting.getLocalStartDate()).toMillis();
         for (Meeting plannedMeeting:meetingsQueue){
             long timeOverlapping = plannedMeeting.millisecondsOverlapping(meeting);
             if (timeOverlapping > 0) {

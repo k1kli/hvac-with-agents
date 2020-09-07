@@ -51,6 +51,7 @@ public class Meeting {
         this.endDate = endDate;
     }
 
+    @SuppressWarnings("unused")
     public AID getRoomCoordinator() {
         return roomCoordinator;
     }

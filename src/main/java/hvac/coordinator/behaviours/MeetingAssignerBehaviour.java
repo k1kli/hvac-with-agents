@@ -168,6 +168,7 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
             roomsNegotiating--;
         }
         if (replies.isEmpty()){
+            context.getLogger().log("All rooms with " + currentRoomSize + " seats are busy");
             sendCFPs(currentRoomSize + 1);
             return;
         }

@@ -126,7 +126,7 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
             roomContext.addMeeting(request.getMeeting());
         }
         else {
-            reply.setPerformative(ACLMessage.REFUSE);
+            reply.setPerformative(ACLMessage.FAILURE);
             request.setStatus(RequestStatus.FAILED);
         }
         fillAndSend(reply, request);
@@ -173,7 +173,7 @@ public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
         msg.clearAllReplyTo();
         msg.setInReplyTo("");
         msg.setReplyWith("");
-        roomContext.getLogger().log("Message sent: " + msg);
+        //roomContext.getLogger().log("Message sent: " + msg);
         myAgent.send(msg);
     }
 }

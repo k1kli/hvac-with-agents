@@ -71,7 +71,8 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
                     TimeZone.getDefault());
             DateTime maxTime = new DateTime(Date.from(now.plusWeeks(1).atZone(ZoneId.systemDefault()).toInstant()),
                     TimeZone.getDefault());
-            Events events = calendar.events().list("primary")
+            //System.out.println("Available calendars: " + calendar.calendarList().list().execute()); // to check the ID of the source calendar
+            Events events = calendar.events().list("ruheb94q1rga1gfonpr949iomc@group.calendar.google.com")
                     .setTimeMin(minTime)
                     .setTimeMax(maxTime)
                     .setOrderBy("startTime")

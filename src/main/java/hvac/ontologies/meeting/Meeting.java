@@ -98,10 +98,10 @@ public class Meeting implements Concept, Comparable<Meeting> {
 
     //TODO change to static?
     public long millisecondsOverlapping(Meeting meeting){
-        long timeDifference = Duration.between((getLocalEndDate().compareTo(meeting.getLocalEndDate()) < 0) ?
-                    getLocalEndDate() : meeting.getLocalEndDate(),
-                (0 < getLocalStartDate().compareTo(meeting.getLocalStartDate())) ?
-                        getLocalStartDate() : meeting.getLocalStartDate()).toMillis();
+        long timeDifference = Duration.between((0 < getLocalStartDate().compareTo(meeting.getLocalStartDate())) ?
+                        getLocalStartDate() : meeting.getLocalStartDate(),
+                (getLocalEndDate().compareTo(meeting.getLocalEndDate()) < 0) ?
+                        getLocalEndDate() : meeting.getLocalEndDate()).toMillis();
         return timeDifference > 0 ? timeDifference : 0;
     }
     //TODO change to static?

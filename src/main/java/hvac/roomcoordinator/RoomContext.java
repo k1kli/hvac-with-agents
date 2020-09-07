@@ -8,10 +8,7 @@ import jade.core.AID;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.*;
 
 public class RoomContext {
     private static final float defaultTemperature = 21;

@@ -26,10 +26,12 @@ public class CoordinatorContext {
     }
 
     public Set<AID> getRoomsByNSeats(int seats){
-        if (! rooms.containsKey(seats) && seats < maxSeats){
-            return  getRoomsByNSeats(seats + 1);
+        for (;seats <= maxSeats;seats++) {
+            if (rooms.containsKey(seats)) {
+                return rooms.get(seats);
+            }
         }
-        return rooms.getOrDefault(seats, null);
+        return null;
     }
 
     public HashMap<String, Meeting> getMeetingsToAssign() {

@@ -25,7 +25,7 @@ public class MeetingOntology extends Ontology {
     public static final String MANTAIN_CONDITIONS = "MantainConditions";
     public static final String MANTAIN_CONDITIONS_CONDITIONS = "conditions";
 
-    private static Ontology theInstance = new MeetingOntology();
+    private static final Ontology theInstance = new MeetingOntology();
 
     public static Ontology getInstance() {return theInstance;}
 
@@ -44,7 +44,6 @@ public class MeetingOntology extends Ontology {
             add(as, Request.class);
             as.add(REQUEST_MEETING, (ConceptSchema) getSchema(MEETING));
             as.add(REQUEST_STATUS, (PrimitiveSchema) getSchema(BasicOntology.INTEGER));
-            as.add(REQUEST_STATUS, (ConceptSchema) getSchema(REQUEST_STATUS));
 
             as = new AgentActionSchema(MANTAIN_CONDITIONS);
             add(as, MantainConditions.class);

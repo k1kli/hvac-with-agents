@@ -6,6 +6,7 @@ import hvac.calendar.CalendarWrapper;
 import hvac.coordinator.behaviours.MeetingUpdatingBehaviour;
 import hvac.database.Connection;
 import hvac.ontologies.meeting.MeetingOntology;
+import hvac.roomcoordinator.RoomCoordinatorAgent;
 import hvac.simulation.rooms.Room;
 import hvac.simulation.rooms.RoomLink;
 import hvac.simulation.rooms.RoomMap;

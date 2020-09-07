@@ -7,6 +7,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+@SuppressWarnings("unused")
 public class Meeting implements Concept, Comparable<Meeting> {
     private String meetingID;
     private LocalDateTime startDate;
@@ -17,6 +18,7 @@ public class Meeting implements Concept, Comparable<Meeting> {
     public Meeting(){}
 
     public Meeting(String meetingID, LocalDateTime startDate, LocalDateTime endDate, int peopleInRoom, float temperature) {
+
         this.meetingID = meetingID;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -30,6 +32,7 @@ public class Meeting implements Concept, Comparable<Meeting> {
         this.endDate = meeting.getEndDate();
         this.peopleInRoom = meeting.getEmployees().size();
         this.temperature = 0;
+
     }
 
     public String getMeetingID() {
@@ -78,7 +81,6 @@ public class Meeting implements Concept, Comparable<Meeting> {
         this.endDate = endDate;
     }
 
-    @SuppressWarnings("unused")
     public int getPeopleInRoom() {
         return peopleInRoom;
     }
@@ -98,9 +100,9 @@ public class Meeting implements Concept, Comparable<Meeting> {
 
     //TODO change to static?
     public long millisecondsOverlapping(Meeting meeting){
-        long timeDifference = Duration.between((0 < getLocalStartDate().compareTo(meeting.getLocalStartDate())) ?
+        long timeDifference = Duration.between(getLocalStartDate().isAfter(meeting.getLocalStartDate()) ?
                         getLocalStartDate() : meeting.getLocalStartDate(),
-                (getLocalEndDate().compareTo(meeting.getLocalEndDate()) < 0) ?
+                (getLocalEndDate().isBefore(meeting.getLocalEndDate())) ?
                         getLocalEndDate() : meeting.getLocalEndDate()).toMillis();
         return timeDifference > 0 ? timeDifference : 0;
     }
@@ -112,5 +114,16 @@ public class Meeting implements Concept, Comparable<Meeting> {
     @Override
     public int compareTo(Meeting emp) {
         return this.getLocalStartDate().compareTo(emp.getLocalStartDate());
+    }
+
+    @Override
+    public String toString() {
+        return "Meeting{" +
+                "meetingID='" + meetingID + '\'' +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", peopleInRoom=" + peopleInRoom +
+                ", temperature=" + temperature +
+                '}';
     }
 }

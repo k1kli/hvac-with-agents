@@ -3,6 +3,7 @@ package hvac.util;
 import hvac.ontologies.machinery.MachineParameter;
 import hvac.ontologies.weather.WeatherSnapshot;
 import hvac.simulation.rooms.RoomClimate;
+import jade.util.leap.ArrayList;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -49,5 +50,11 @@ public class Conversions {
         } catch (ClassCastException e) {
             throw new IllegalArgumentException("elements of given jade list are not of type required for result list");
         }
+    }
+
+    public static <T> jade.util.leap.List toJadeList(List<T> javaList) {
+        ArrayList arrayList = new ArrayList();
+        javaList.forEach(arrayList::add);
+        return arrayList;
     }
 }

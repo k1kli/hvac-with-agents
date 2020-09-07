@@ -8,20 +8,25 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 public class RoomCoordinatorCyclicBehaviour extends CyclicBehaviour {
     private final RoomContext roomContext;
     private final RoomCoordinatorTickerBehaviour tickerBehaviour;
+    private final MessageTemplate messageTemplate;
 
     public RoomCoordinatorCyclicBehaviour(Agent a, RoomContext roomContext, RoomCoordinatorTickerBehaviour tickerBehaviour) {
         super(a);
         this.roomContext = roomContext;
         this.tickerBehaviour = tickerBehaviour;
+        messageTemplate = MessageTemplate.not(MessageTemplate.MatchSender(
+                roomContext.getMyRoomUpkeeper()
+        ));
     }
 
     @Override
     public void action() {
-        ACLMessage msg = myAgent.receive();
+        ACLMessage msg = myAgent.receive(messageTemplate);
         if (msg != null) {
             handleMessage(msg);
         }

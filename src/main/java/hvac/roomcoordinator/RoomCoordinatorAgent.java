@@ -15,7 +15,6 @@ import java.util.ArrayList;
 
 import static hvac.util.Helpers.initTimeFromArgs;
 
-@SuppressWarnings("unused")
 public class RoomCoordinatorAgent extends Agent {
     private RoomContext roomContext;
     private ArrayList<Integer> Ids;
@@ -24,7 +23,9 @@ public class RoomCoordinatorAgent extends Agent {
 
     @Override
     protected void setup() {
-        getContentManager().registerLanguage(new SLCodec(), FIPANames.ContentLanguage.FIPA_SL0);
+        if(!initTimeFromArgs(this, this::usage)) return;
+        getContentManager().registerLanguage(new SLCodec(),
+                FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(MeetingOntology.getInstance());
         if(!initTimeFromArgs(this, this::usage)) return;
         roomContext = getContext();
@@ -64,7 +65,9 @@ public class RoomCoordinatorAgent extends Agent {
                 upkeeperDescriptor->{
                     newRoomContext.setMyRoomUpkeeper(upkeeperDescriptor.getName());
                     processRoom();}));
-
+        //uncomment this to test coordinator-upkeeper communication
+        //if(myRoomId == 1) newRoomContext.addMeeting(new Meeting("abc", Conversions.toDate(DateTimeSimulator.getCurrentDate().plusMinutes(40)),
+        //        Conversions.toDate(DateTimeSimulator.getCurrentDate().plusHours(3)),3, 300.0f));
         return newRoomContext;
     }
 

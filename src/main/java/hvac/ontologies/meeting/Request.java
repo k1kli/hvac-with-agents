@@ -2,12 +2,13 @@ package hvac.ontologies.meeting;
 
 import jade.content.AgentAction;
 
+@SuppressWarnings("unused")
 public class Request implements AgentAction {
     private Meeting meeting;
     private RequestStatus requestStatus;
 
     public Request(){}
-
+  
     public Request(Meeting meeting, RequestStatus requestStatus) {
         this.meeting = meeting;
         this.requestStatus = requestStatus;

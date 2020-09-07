@@ -1,10 +1,11 @@
 package hvac.roomupkeeper;
 
 import hvac.ontologies.machinery.MachineryOntology;
-import hvac.ontologies.meeting.Meeting;
+import hvac.ontologies.meeting.MeetingOntology;
 import hvac.ontologies.roomclimate.RoomClimateOntology;
 import hvac.ontologies.weather.WeatherOntology;
 import hvac.roomupkeeper.behaviours.ClimateUpkeepingBehaviour;
+import hvac.roomupkeeper.behaviours.ConditionsReceivingBehaviour;
 import hvac.time.DateTimeSimulator;
 import hvac.util.df.DfHelpers;
 import hvac.util.df.FindingBehaviour;
@@ -14,7 +15,6 @@ import jade.domain.FIPANames;
 
 import static hvac.util.Helpers.initTimeFromArgs;
 
-@SuppressWarnings("unused")
 public class RoomUpkeeperAgent extends Agent {
     @Override
     protected void setup() {
@@ -25,6 +25,7 @@ public class RoomUpkeeperAgent extends Agent {
         getContentManager().registerOntology(RoomClimateOntology.getInstance());
         getContentManager().registerOntology(MachineryOntology.getInstance());
         getContentManager().registerOntology(WeatherOntology.getInstance());
+        getContentManager().registerOntology(MeetingOntology.getInstance());
 
         RoomUpkeeperContext context = getContext();
         if(context == null) {
@@ -41,12 +42,7 @@ public class RoomUpkeeperAgent extends Agent {
                 context.setWeatherForecaster(forecasterDescriptor.getName());
                 context.getLogger().setAgentName("room upkeeper (" + context.getMyRoomId() + ")");
                 addBehaviour(new ClimateUpkeepingBehaviour(this, context));
-                context.setNextMeeting(new Meeting(
-                        "abc",
-                        DateTimeSimulator.getCurrentDate().plusHours(2),
-                        DateTimeSimulator.getCurrentDate().plusHours(4),
-                        5,
-                        300.0f));
+                addBehaviour(new ConditionsReceivingBehaviour(this, context));
             }));
         }));
     }

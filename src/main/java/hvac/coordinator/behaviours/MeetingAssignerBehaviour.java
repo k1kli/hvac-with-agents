@@ -26,7 +26,7 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
     private AID candidate = null;
     private boolean done = false;
     private boolean sendCFPs = true;
-    private final float targetTemperature = 22; //TODO: Calculate this from DB of employees
+    private final float targetTemperature = 22+273; //TODO: Calculate this from DB of employees
 
     public MeetingAssignerBehaviour(Agent a, Meeting meeting, CoordinatorContext context) {
         super(a);

@@ -303,7 +303,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                 arguments, values);
         return Math.max(Math.min(unboundRequiredHeatingPower,
                 currentMachinery.getHeater().getHeatingPower().getMaxValue()),
-                -currentMachinery.getAirConditioner().getAirExchangedPerSecond().getMaxValue());
+                -currentMachinery.getAirConditioner().getCoolingPower().getMaxValue());
     }
 
     private float calculateHumidityMaintainingAirPerSecond(float requiredHumiditySlope) {

@@ -5,50 +5,36 @@ import hvac.ontologies.roomclimate.RoomClimateOntology;
 import hvac.simulation.SimulationContext;
 import hvac.simulation.rooms.RoomClimate;
 import hvac.util.Conversions;
+import hvac.util.behaviours.RequestProcessingBehaviour;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.onto.OntologyException;
 import jade.content.onto.basic.Action;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.util.Hashtable;
 
-public class ClimateInformingBehaviour extends CyclicBehaviour {
+import static hvac.util.SimpleReplies.replyNotUnderstood;
+import static hvac.util.SimpleReplies.replyRefuse;
+
+public class ClimateInformingBehaviour extends RequestProcessingBehaviour {
     private final SimulationContext context;
-    private final MessageTemplate messageTemplate = MessageTemplate.and(
+    private final MessageTemplate template = MessageTemplate.and(
                     MessageTemplate.MatchLanguage(FIPANames.ContentLanguage.FIPA_SL0),
                     MessageTemplate.MatchOntology(RoomClimateOntology.getInstance().getName())
     );
 
     public ClimateInformingBehaviour(Agent a, SimulationContext context) {
-        super(a);
+        super(a, context.getLogger());
         this.context = context;
     }
 
     @Override
-    public void action() {
-        ACLMessage msg = myAgent.receive(messageTemplate);
-        if(msg != null) {
-            if(msg.getPerformative() == ACLMessage.REQUEST) {
-                try {
-                    processRequest(msg);
-                } catch (Codec.CodecException | OntologyException e) {
-                    replyNotUnderstood(msg);
-                }
-            } else {
-                replyNotUnderstood(msg);
-            }
-        } else {
-            block();
-        }
-    }
-
-    private void processRequest(ACLMessage msg) throws Codec.CodecException, OntologyException {
+    protected void processRequest(ACLMessage msg) throws Codec.CodecException, OntologyException {
         ContentElement ce = myAgent.getContentManager().extractContent(msg);
         if (ce instanceof Action) {
             Concept action = ((Action) ce).getAction();
@@ -68,23 +54,16 @@ public class ClimateInformingBehaviour extends CyclicBehaviour {
                             ", relative humidity: " + roomClimate.getRelativeHumidity());
                     myAgent.send(reply);
                 } else {
-                    replyRefuse(msg);
+                    replyRefuse(myAgent, msg);
                 }
                 return;
             }
         }
-        replyNotUnderstood(msg);
+        replyNotUnderstood(myAgent, msg);
     }
 
-    private void replyRefuse(ACLMessage msg) {
-        ACLMessage reply = msg.createReply();
-        reply.setPerformative(ACLMessage.REFUSE);
-        myAgent.send(reply);
-    }
-
-    private void replyNotUnderstood(ACLMessage msg) {
-        ACLMessage reply = msg.createReply();
-        reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-        myAgent.send(reply);
+    @Override
+    protected MessageTemplate getTemplate() {
+        return template;
     }
 }

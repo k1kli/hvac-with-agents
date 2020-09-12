@@ -7,13 +7,14 @@ import hvac.ontologies.weather.WeatherOntology;
 import hvac.util.Conversions;
 import hvac.util.Helpers;
 import hvac.util.JadeCollectors;
+import hvac.util.Logger;
+import hvac.util.behaviours.RequestProcessingBehaviour;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.onto.OntologyException;
 import jade.content.onto.basic.Action;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -21,7 +22,9 @@ import jade.lang.acl.MessageTemplate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public class ForecastProvidingBehaviour extends CyclicBehaviour {
+import static hvac.util.SimpleReplies.replyNotUnderstood;
+
+public class ForecastProvidingBehaviour extends RequestProcessingBehaviour {
     private final List<WeatherSnapshot> snapshots;
     private final MessageTemplate template = MessageTemplate.and(
             MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
@@ -31,27 +34,13 @@ public class ForecastProvidingBehaviour extends CyclicBehaviour {
             )
     );
 
-    public ForecastProvidingBehaviour(Agent agent, List<WeatherSnapshot> snapshots) {
-        super(agent);
+    public ForecastProvidingBehaviour(Agent agent, List<WeatherSnapshot> snapshots, Logger logger) {
+        super(agent, logger);
         this.snapshots = snapshots;
     }
 
     @Override
-    public void action() {
-        ACLMessage msg = myAgent.receive(template);
-        if (msg != null) {
-            try {
-                processRequest(msg);
-            } catch (OntologyException | Codec.CodecException e) {
-                e.printStackTrace();
-                replyNotUnderstood(msg);
-            }
-        } else {
-            block();
-        }
-    }
-
-    private void processRequest(ACLMessage msg) throws Codec.CodecException, OntologyException {
+    protected void processRequest(ACLMessage msg) throws Codec.CodecException, OntologyException {
         ContentElement ce = myAgent.getContentManager().extractContent(msg);
         if (ce instanceof Action) {
             Concept action = ((Action) ce).getAction();
@@ -73,12 +62,11 @@ public class ForecastProvidingBehaviour extends CyclicBehaviour {
                 return;
             }
         }
-        replyNotUnderstood(msg);
+        replyNotUnderstood(myAgent, msg);
     }
 
-    private void replyNotUnderstood(ACLMessage msg) {
-        ACLMessage reply = msg.createReply();
-        reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-        myAgent.send(reply);
+    @Override
+    protected MessageTemplate getTemplate() {
+        return template;
     }
 }

@@ -4,13 +4,13 @@ import hvac.ontologies.machinery.*;
 import hvac.simulation.SimulationContext;
 import hvac.simulation.rooms.RoomClimate;
 import hvac.util.Conversions;
+import hvac.util.behaviours.RequestProcessingBehaviour;
 import jade.content.Concept;
 import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.onto.OntologyException;
 import jade.content.onto.basic.Action;
 import jade.core.Agent;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -20,38 +20,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-public class MachineryInterfaceBehaviour extends CyclicBehaviour {
+import static hvac.util.SimpleReplies.*;
+
+public class MachineryInterfaceBehaviour extends RequestProcessingBehaviour {
 
     private final SimulationContext context;
-    private final MessageTemplate messageTemplate = MessageTemplate.and(
+    private final MessageTemplate template = MessageTemplate.and(
             MessageTemplate.MatchOntology(MachineryOntology.getInstance().getName()),
             MessageTemplate.MatchLanguage(FIPANames.ContentLanguage.FIPA_SL0)
     );
 
     public MachineryInterfaceBehaviour(Agent a, SimulationContext context) {
-        super(a);
+        super(a, context.getLogger());
         this.context = context;
     }
 
     @Override
-    public void action() {
-        ACLMessage msg = myAgent.receive(messageTemplate);
-        if (msg != null) {
-            if (msg.getPerformative() == ACLMessage.REQUEST) {
-                try {
-                    processRequest(msg);
-                } catch (Codec.CodecException | OntologyException e) {
-                    replyNotUnderstood(msg);
-                }
-            } else {
-                replyNotUnderstood(msg);
-            }
-        } else {
-            block();
-        }
-    }
-
-    private void processRequest(ACLMessage msg) throws Codec.CodecException, OntologyException {
+    protected void processRequest(ACLMessage msg) throws Codec.CodecException, OntologyException {
         ContentElement ce = myAgent.getContentManager().extractContent(msg);
         if (ce instanceof Action) {
             Concept action = ((Action) ce).getAction();
@@ -65,7 +50,12 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
                 return;
             }
         }
-        replyNotUnderstood(msg);
+        replyNotUnderstood(myAgent, msg);
+    }
+
+    @Override
+    protected MessageTemplate getTemplate() {
+        return template;
     }
 
     private void processReportMachineryStatus(ACLMessage msg, ReportMachineryStatus reportMachineryStatus)
@@ -74,7 +64,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         reply.setPerformative(ACLMessage.INFORM);
         int roomId = reportMachineryStatus.getRoomId();
         RoomClimate climate = context.getClimates().get(roomId);
-        if(climate == null) { replyRefuse(msg); return; }
+        if(climate == null) { replyRefuse(myAgent, msg); return; }
         Machinery machinery = new Machinery(
                 new AirConditioner(
                         Conversions.toOntologyParameter(climate.getAirConditioner().getExchangedAirVolumePerSecond()),
@@ -107,7 +97,7 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
         int roomId = updateMachinery.getRoomId();
         Machinery machinery = updateMachinery.getMachinery();
         RoomClimate climate = context.getClimates().get(roomId);
-        if(climate == null) { replyRefuse(msg); return; }
+        if(climate == null) { replyRefuse(myAgent, msg); return; }
         context.getLogger().log("requested parameter updates for roomId="+roomId);
         List<ParameterUpdate> parameterUpdates = getRequestedParameterUpdates(machinery, climate);
         boolean allValid = parameterUpdates.stream().allMatch(parameterUpdate ->
@@ -116,10 +106,10 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
             parameterUpdates.forEach(
                     parameterUpdate -> parameterUpdate.parameterToUpdate.setCurrentValue(parameterUpdate.newValue)
             );
-            replyAgree(msg);
+            replyAgree(myAgent, msg);
         }
         else
-            replyRefuse(msg);
+            replyRefuse(myAgent, msg);
     }
 
     private List<ParameterUpdate> getRequestedParameterUpdates(Machinery machinery, RoomClimate climate) {
@@ -171,26 +161,5 @@ public class MachineryInterfaceBehaviour extends CyclicBehaviour {
                 });
         context.getLogger().log("requested parameter updates: " + joiner.toString());
         return parameterUpdates;
-    }
-
-    private void replyNotUnderstood(ACLMessage msg) {
-        context.getLogger().log("not understood");
-        ACLMessage reply = msg.createReply();
-        reply.setPerformative(ACLMessage.NOT_UNDERSTOOD);
-        myAgent.send(reply);
-    }
-
-    private void replyRefuse(ACLMessage msg) {
-        context.getLogger().log("refuse");
-        ACLMessage reply = msg.createReply();
-        reply.setPerformative(ACLMessage.REFUSE);
-        myAgent.send(reply);
-    }
-
-    private void replyAgree(ACLMessage msg) {
-        context.getLogger().log("agree");
-        ACLMessage reply = msg.createReply();
-        reply.setPerformative(ACLMessage.AGREE);
-        myAgent.send(reply);
     }
 }

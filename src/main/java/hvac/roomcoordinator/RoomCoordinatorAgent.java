@@ -1,8 +1,11 @@
 package hvac.roomcoordinator;
 
 import hvac.ontologies.meeting.MeetingOntology;
-import hvac.roomcoordinator.behaviours.RoomCoordinatorCyclicBehaviour;
-import hvac.roomcoordinator.behaviours.RoomCoordinatorTickerBehaviour;
+import hvac.ontologies.presence.PresenceOntology;
+import hvac.roomcoordinator.behaviours.ConditionsInformingBehaviour;
+import hvac.roomcoordinator.behaviours.MeetingHandlingBehaviour;
+import hvac.roomcoordinator.behaviours.PeopleHandlingBehaviour;
+import hvac.roomcoordinator.behaviours.UpkeeperManagingBehaviour;
 import hvac.simulation.rooms.RoomWall;
 import hvac.util.df.DfHelpers;
 import hvac.util.df.FindingBehaviour;
@@ -27,7 +30,7 @@ public class RoomCoordinatorAgent extends Agent {
         getContentManager().registerLanguage(new SLCodec(),
                 FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(MeetingOntology.getInstance());
-        if(!initTimeFromArgs(this, this::usage)) return;
+        getContentManager().registerOntology(PresenceOntology.getInstance());
         roomContext = getContext();
         if(roomContext == null) {
             doDelete();
@@ -36,6 +39,9 @@ public class RoomCoordinatorAgent extends Agent {
 
     @SuppressWarnings("unchecked")
     private RoomContext getContext() {
+        if(getArguments().length != 7) {
+            usage("incorrect number of arguments, required:7, provided: " + getArguments().length);
+        }
         int myRoomId;
         try {
             myRoomId = Integer.parseInt(getArguments()[2].toString());
@@ -47,7 +53,7 @@ public class RoomCoordinatorAgent extends Agent {
             usage("room cannot be registered in DF");
             return null;
         }
-        RoomContext newRoomContext = new RoomContext(myRoomId, (AID) getArguments()[3]);
+        RoomContext newRoomContext = new RoomContext(myRoomId, (AID) getArguments()[3], (boolean)getArguments()[6]);
         newRoomContext.getLogger().setAgentName("room coordinator (" + newRoomContext.getMyRoomId() + ")");
         try {
             Ids = (ArrayList<Integer>) getArguments()[4];
@@ -73,9 +79,14 @@ public class RoomCoordinatorAgent extends Agent {
 
     private void processRoom(){
         if (Ids.size() == roomsProcessed) {
-            RoomCoordinatorTickerBehaviour tickerBehaviour = new RoomCoordinatorTickerBehaviour(this, 1000, roomContext);
-            addBehaviour(tickerBehaviour);
-            addBehaviour(new RoomCoordinatorCyclicBehaviour(this, roomContext, tickerBehaviour));
+            UpkeeperManagingBehaviour upkeeperManagingBehaviour = new UpkeeperManagingBehaviour(this, 1000, roomContext);
+            addBehaviour(upkeeperManagingBehaviour);
+            addBehaviour(new ConditionsInformingBehaviour(this, roomContext));
+            if(roomContext.isMeetingRoom()) {
+                addBehaviour(new MeetingHandlingBehaviour(this, roomContext, upkeeperManagingBehaviour));
+            } else {
+                addBehaviour(new PeopleHandlingBehaviour(this, roomContext, upkeeperManagingBehaviour));
+            }
             roomContext.getLogger().log("Successfully initialized and found all my neighbours and upkeeper");
             return;
         }
@@ -89,13 +100,14 @@ public class RoomCoordinatorAgent extends Agent {
 
     private void usage(String err) {
         System.err.println("-------- Room Coordinator agent usage --------------");
-        System.err.println("simulation:hvac.roomcoordinator.RoomCoordinatorAgent(timeScale, start_date, RoomId, CoordinatorAID, NeighboursIds, RoomWalls)");
+        System.err.println("simulation:hvac.roomcoordinator.RoomCoordinatorAgent(timeScale, start_date, RoomId, CoordinatorAID, NeighboursIds, RoomWalls, isMeetingRoom)");
         System.err.println("timescale - floating point value indicating speed of passing time");
         System.err.println("Date from which to start simulating \"yyyy-MM-dd HH:mm:ss\"");
         System.err.println("RoomId - integer uniquely identifying the room of this agent");
         System.err.println("CoordinatorAID - AID of Coordinator");
         System.err.println("NeighboursIds - array of neighbours' Ids");
         System.err.println("RoomWalls - array of walls' properties");
+        System.err.println("IsMeetingRoom - boolean indicating if this room will be used for meetings");
         System.err.println("err:" + err);
     }
 }

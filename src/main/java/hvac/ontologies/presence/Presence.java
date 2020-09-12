@@ -74,4 +74,7 @@ public class Presence implements Concept {
     public void setUntil(Date until) {
         this.until = Conversions.toLocalDateTime(until);
     }
+    public boolean isValid() {
+        return since.isBefore(until);
+    }
 }

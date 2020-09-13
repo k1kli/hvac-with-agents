@@ -6,6 +6,7 @@ import jade.content.Concept;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Objects;
 
 @SuppressWarnings("unused")
 public class Meeting implements Concept, Comparable<Meeting> {
@@ -125,5 +126,22 @@ public class Meeting implements Concept, Comparable<Meeting> {
                 ", peopleInRoom=" + peopleInRoom +
                 ", temperature=" + temperature +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Meeting meeting = (Meeting) o;
+        return peopleInRoom == meeting.peopleInRoom &&
+                Float.compare(meeting.temperature, temperature) == 0 &&
+                Objects.equals(meetingID, meeting.meetingID) &&
+                startDate.equals(meeting.startDate) &&
+                endDate.equals(meeting.endDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(meetingID, startDate, endDate, peopleInRoom, temperature);
     }
 }

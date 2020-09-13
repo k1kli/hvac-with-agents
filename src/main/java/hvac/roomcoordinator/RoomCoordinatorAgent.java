@@ -7,6 +7,7 @@ import hvac.roomcoordinator.behaviours.MeetingHandlingBehaviour;
 import hvac.roomcoordinator.behaviours.PeopleHandlingBehaviour;
 import hvac.roomcoordinator.behaviours.UpkeeperManagingBehaviour;
 import hvac.simulation.rooms.RoomWall;
+import hvac.util.behaviours.NotUnderstoodBehaviour;
 import hvac.util.df.DfHelpers;
 import hvac.util.df.FindingBehaviour;
 import jade.content.lang.sl.SLCodec;
@@ -81,11 +82,24 @@ public class RoomCoordinatorAgent extends Agent {
         if (Ids.size() == roomsProcessed) {
             UpkeeperManagingBehaviour upkeeperManagingBehaviour = new UpkeeperManagingBehaviour(this, 1000, roomContext);
             addBehaviour(upkeeperManagingBehaviour);
-            addBehaviour(new ConditionsInformingBehaviour(this, roomContext));
+            ConditionsInformingBehaviour conditionsInformingBehaviour = new ConditionsInformingBehaviour(this, roomContext);
+            addBehaviour(conditionsInformingBehaviour);
             if(roomContext.isMeetingRoom()) {
-                addBehaviour(new MeetingHandlingBehaviour(this, roomContext, upkeeperManagingBehaviour));
+                MeetingHandlingBehaviour meetingHandlingBehaviour = new MeetingHandlingBehaviour(this, roomContext, upkeeperManagingBehaviour);
+                addBehaviour(meetingHandlingBehaviour);
+
+                addBehaviour(new NotUnderstoodBehaviour(this, roomContext.getLogger(),
+                        upkeeperManagingBehaviour.getTemplate(),
+                        conditionsInformingBehaviour.getTemplate(),
+                        meetingHandlingBehaviour.getTemplate()));
             } else {
-                addBehaviour(new PeopleHandlingBehaviour(this, roomContext, upkeeperManagingBehaviour));
+                PeopleHandlingBehaviour peopleHandlingBehaviour = new PeopleHandlingBehaviour(this, roomContext, upkeeperManagingBehaviour);
+                addBehaviour(peopleHandlingBehaviour);
+
+                addBehaviour(new NotUnderstoodBehaviour(this, roomContext.getLogger(),
+                        upkeeperManagingBehaviour.getTemplate(),
+                        conditionsInformingBehaviour.getTemplate(),
+                        peopleHandlingBehaviour.getTemplate()));
             }
             roomContext.getLogger().log("Successfully initialized and found all my neighbours and upkeeper");
             return;

@@ -51,7 +51,7 @@ public class ConditionsInformingBehaviour extends RequestProcessingBehaviour {
     }
 
     @Override
-    protected MessageTemplate getTemplate() {
+    public MessageTemplate getTemplate() {
         return template;
     }
 }

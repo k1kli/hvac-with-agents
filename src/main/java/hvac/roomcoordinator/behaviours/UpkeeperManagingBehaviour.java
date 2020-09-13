@@ -87,4 +87,8 @@ public class UpkeeperManagingBehaviour extends TickerBehaviour {
             reset(standardPeriod);
         }
     }
+
+    public MessageTemplate getTemplate() {
+        return upkeeperTemplate;
+    }
 }

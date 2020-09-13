@@ -2,6 +2,7 @@ package hvac.ontologies.presence;
 
 import hvac.util.Conversions;
 import jade.content.Concept;
+import jade.content.onto.annotations.Slot;
 import jade.content.onto.annotations.SuppressSlot;
 import jade.core.AID;
 
@@ -25,6 +26,7 @@ public class Presence implements Concept {
     public Presence() {
     }
 
+    @Slot(mandatory = true)
     public AID getPerson() {
         return person;
     }
@@ -33,6 +35,7 @@ public class Presence implements Concept {
         this.person = person;
     }
 
+    @Slot(mandatory = true)
     public int getRoomId() {
         return roomId;
     }
@@ -75,6 +78,6 @@ public class Presence implements Concept {
         this.until = Conversions.toLocalDateTime(until);
     }
     public boolean isValid() {
-        return since.isBefore(until);
+        return !(since == null && until == null) && (since == null || until == null || since.isBefore(until));
     }
 }

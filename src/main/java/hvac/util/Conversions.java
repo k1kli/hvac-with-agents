@@ -14,11 +14,13 @@ import java.util.stream.Collectors;
 
 public class Conversions {
     public static LocalDateTime toLocalDateTime(Date date) {
+        if(date == null) return null;
         return date.toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime();
     }
     public static Date toDate(LocalDateTime date) {
+        if(date == null) return null;
         return Date.from(date.atZone(ZoneId.systemDefault()).toInstant());
     }
 

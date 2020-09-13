@@ -180,4 +180,8 @@ public class MeetingHandlingBehaviour extends CyclicBehaviour {
         //roomContext.getLogger().log("Message sent: " + msg);
         myAgent.send(msg);
     }
+
+    public MessageTemplate getTemplate() {
+        return messageTemplate;
+    }
 }

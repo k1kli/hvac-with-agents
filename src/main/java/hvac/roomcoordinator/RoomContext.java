@@ -99,6 +99,10 @@ public class RoomContext {
             }
         }
     }
+    public void setMeetings(List<Meeting> meetings) {
+        this.meetingsQueue.clear();
+        this.meetingsQueue.addAll(meetings);
+    }
 
     public void newForecastEntry(Meeting meeting){
         neighboursForecastStatus.put(meeting.getMeetingID(), new AbstractMap.SimpleEntry<>(meeting, new HashMap<>()));

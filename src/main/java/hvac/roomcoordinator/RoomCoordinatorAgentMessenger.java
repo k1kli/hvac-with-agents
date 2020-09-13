@@ -1,10 +1,8 @@
 package hvac.roomcoordinator;
 
-import hvac.ontologies.presence.Presence;
-import hvac.ontologies.presence.PresenceOntology;
-import hvac.ontologies.presence.RequestAddPresence;
-import hvac.ontologies.presence.RequestCurrentPresences;
+import hvac.ontologies.presence.*;
 import hvac.util.CommonMessengerFunctions;
+import jade.content.ContentElement;
 import jade.content.lang.Codec;
 import jade.content.onto.OntologyException;
 import jade.core.AID;
@@ -12,6 +10,7 @@ import jade.core.Agent;
 import jade.lang.acl.ACLMessage;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @SuppressWarnings("unused")
 public class RoomCoordinatorAgentMessenger {
@@ -31,6 +30,25 @@ public class RoomCoordinatorAgentMessenger {
         return CommonMessengerFunctions.createActionMessage(
                 myAgent, roomCoordinator, requestCurrentPresences, PresenceOntology.getInstance());
     }
+
+    /**
+     * Extracts presences info from message received from weather forecaster
+     * Requires that agent has registered sl0 language and presence ontology
+     * @param myAgent calling agent
+     * @param msg message with presences info
+     * @return extracted presences info if message contains one
+     * @throws Codec.CodecException sl0 language is not registered or message is not in this language
+     * @throws OntologyException presence ontology is not registered or message is not in this ontology
+     */
+    public static Optional<PresencesInfo> extractPresencesInfo(Agent myAgent, ACLMessage msg)
+            throws Codec.CodecException, OntologyException {
+        ContentElement content = myAgent.getContentManager().extractContent(msg);
+        if(content instanceof PresencesInfo) {
+            return Optional.of((PresencesInfo)content);
+        }
+        return Optional.empty();
+    }
+
     /**
      * prepares message that when sent to room coordinator agent for non meeting room
      * will result in it being added to that agents presences - conditions will be maintained in that room for

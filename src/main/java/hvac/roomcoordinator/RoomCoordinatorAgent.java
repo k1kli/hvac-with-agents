@@ -40,8 +40,8 @@ public class RoomCoordinatorAgent extends Agent {
 
     @SuppressWarnings("unchecked")
     private RoomContext getContext() {
-        if(getArguments().length != 7) {
-            usage("incorrect number of arguments, required:7, provided: " + getArguments().length);
+        if(getArguments().length != 8) {
+            usage("incorrect number of arguments, required:8, provided: " + getArguments().length);
         }
         int myRoomId;
         try {
@@ -54,7 +54,17 @@ public class RoomCoordinatorAgent extends Agent {
             usage("room cannot be registered in DF");
             return null;
         }
-        RoomContext newRoomContext = new RoomContext(myRoomId, (AID) getArguments()[3], (boolean)getArguments()[6]);
+        int seats;
+        try {
+            seats = Integer.parseInt(getArguments()[7].toString());
+        } catch (NumberFormatException e) {
+            usage("seats amount is not valid");
+            return null;
+        }
+        RoomContext newRoomContext = new RoomContext(myRoomId,
+                (AID) getArguments()[3],
+                (boolean)getArguments()[6],
+                seats);
         newRoomContext.getLogger().setAgentName("room coordinator (" + newRoomContext.getMyRoomId() + ")");
         try {
             Ids = (ArrayList<Integer>) getArguments()[4];
@@ -114,7 +124,7 @@ public class RoomCoordinatorAgent extends Agent {
 
     private void usage(String err) {
         System.err.println("-------- Room Coordinator agent usage --------------");
-        System.err.println("simulation:hvac.roomcoordinator.RoomCoordinatorAgent(timeScale, start_date, RoomId, CoordinatorAID, NeighboursIds, RoomWalls, isMeetingRoom)");
+        System.err.println("simulation:hvac.roomcoordinator.RoomCoordinatorAgent(timeScale, start_date, RoomId, CoordinatorAID, NeighboursIds, RoomWalls, isMeetingRoom, seats)");
         System.err.println("timescale - floating point value indicating speed of passing time");
         System.err.println("Date from which to start simulating \"yyyy-MM-dd HH:mm:ss\"");
         System.err.println("RoomId - integer uniquely identifying the room of this agent");
@@ -122,6 +132,7 @@ public class RoomCoordinatorAgent extends Agent {
         System.err.println("NeighboursIds - array of neighbours' Ids");
         System.err.println("RoomWalls - array of walls' properties");
         System.err.println("IsMeetingRoom - boolean indicating if this room will be used for meetings");
+        System.err.println("seats - number of seats in this room");
         System.err.println("err:" + err);
     }
 }

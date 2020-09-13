@@ -20,11 +20,13 @@ public class RoomContext {
     private final Map<String, AbstractMap.SimpleEntry<Meeting, Map<AID, Float>>> neighboursForecastStatus = new HashMap<>();
     private final Logger logger = new Logger();
     private final boolean meetingRoom;
+    private final int seats;
 
-    RoomContext(int myRoomId, AID coordinator, boolean meetingRoom){
+    RoomContext(int myRoomId, AID coordinator, boolean meetingRoom, int seats){
         this.myRoomId = myRoomId;
         this.coordinator = coordinator;
         this.meetingRoom = meetingRoom;
+        this.seats = seats;
     }
 
     public int getMyRoomId() {
@@ -130,5 +132,9 @@ public class RoomContext {
             forecastSum += entry.getValue() * factor;
         }
         return forecastSum/factorSum;
+    }
+
+    public int getSeats() {
+        return seats;
     }
 }

@@ -73,7 +73,8 @@ public class CoordinatorAgent extends Agent {
                                 getAID(),
                                 myNeighboursIds,
                                 myWalls,
-                                room.isMeetingRoom()}).start();
+                                room.isMeetingRoom(),
+                                room.getSeats()}).start();
 
                 newContainer.createNewAgent("upkeeper-" + room.getId(),
                         "hvac.roomupkeeper.RoomUpkeeperAgent",

@@ -51,7 +51,6 @@ public class PeopleHandlingBehaviour extends RequestProcessingBehaviour {
             } else if (action instanceof RequestAddPresence) {
                 RequestAddPresence requestAddPresence = (RequestAddPresence) action;
                 handleRequestAddPresence(msg, requestAddPresence);
-                context.getLogger().log(msg.toString());
                 handled = true;
             }
         }
@@ -130,8 +129,7 @@ public class PeopleHandlingBehaviour extends RequestProcessingBehaviour {
 
     //checks if at any point there will be too many people in the room
     private boolean arePresencesValid(List<Presence> presenceList) {
-        //TODO:replace with chairs count from coordinator
-        int maxPresences = 3;
+        int maxPresences = context.getSeats();
         LinkedList<Presence> concurrentPresences = new LinkedList<>();
         for (Presence presence :
                 presenceList) {

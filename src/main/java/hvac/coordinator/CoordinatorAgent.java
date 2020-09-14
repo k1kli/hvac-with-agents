@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import static hvac.util.Helpers.initTimeFromArgs;
 import static hvac.util.Helpers.loadMap;
 
-@SuppressWarnings("unused")
 public class CoordinatorAgent extends Agent {
     Connection database;
     Calendar calendar;
@@ -67,14 +66,27 @@ public class CoordinatorAgent extends Agent {
             try {
                 newContainer.createNewAgent("room-coordinator-" + room.getId(),
                         RoomCoordinatorAgent.class.getCanonicalName(),
-                        new Object[]{getArguments()[0], getArguments()[1], room.getId(), getAID(), myNeighboursIds, myWalls}).start();
+                        new Object[]{
+                                getArguments()[0],
+                                getArguments()[1],
+                                room.getId(),
+                                getAID(),
+                                myNeighboursIds,
+                                myWalls,
+                                room.isMeetingRoom(),
+                                room.getSeats()}).start();
 
                 newContainer.createNewAgent("upkeeper-" + room.getId(),
                         "hvac.roomupkeeper.RoomUpkeeperAgent",
-                        new Object[]{getArguments()[0], getArguments()[1], room.getId(), room.getArea()}).start();
+                        new Object[]{
+                                getArguments()[0],
+                                getArguments()[1],
+                                room.getId(),
+                                room.getArea()}).start();
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            if(room.isMeetingRoom())
             context.addRoom(room.getSeats(),
                     new AID("room-coordinator-" + room.getId() + "@" + newContainer.getPlatformName(),AID.ISGUID));
         }

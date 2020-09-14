@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class RoomContext {
-    private static final float defaultTemperature = 21;
+    private static final float defaultTemperature = 21+273;
     private final int myRoomId;
     private final AID coordinator;
     private AID myRoomUpkeeper;
@@ -19,10 +19,14 @@ public class RoomContext {
     private final PriorityQueue<Meeting> meetingsQueue = new PriorityQueue<>();
     private final Map<String, AbstractMap.SimpleEntry<Meeting, Map<AID, Float>>> neighboursForecastStatus = new HashMap<>();
     private final Logger logger = new Logger();
+    private final boolean meetingRoom;
+    private final int seats;
 
-    RoomContext(int myRoomId, AID coordinator){
+    RoomContext(int myRoomId, AID coordinator, boolean meetingRoom, int seats){
         this.myRoomId = myRoomId;
         this.coordinator = coordinator;
+        this.meetingRoom = meetingRoom;
+        this.seats = seats;
     }
 
     public int getMyRoomId() {
@@ -51,6 +55,10 @@ public class RoomContext {
 
     public void addMeeting(Meeting meeting){
         meetingsQueue.add(meeting);
+    }
+
+    public boolean isMeetingRoom() {
+        return meetingRoom;
     }
 
     public List<Meeting> getMeetingsStartingBefore(LocalDateTime date){
@@ -93,6 +101,10 @@ public class RoomContext {
             }
         }
     }
+    public void setMeetings(List<Meeting> meetings) {
+        this.meetingsQueue.clear();
+        this.meetingsQueue.addAll(meetings);
+    }
 
     public void newForecastEntry(Meeting meeting){
         neighboursForecastStatus.put(meeting.getMeetingID(), new AbstractMap.SimpleEntry<>(meeting, new HashMap<>()));
@@ -120,5 +132,9 @@ public class RoomContext {
             forecastSum += entry.getValue() * factor;
         }
         return forecastSum/factorSum;
+    }
+
+    public int getSeats() {
+        return seats;
     }
 }

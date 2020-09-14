@@ -18,10 +18,10 @@ import java.util.function.Consumer;
 
 public class Helpers {
     public static void loadMap(RoomMap roomMap){
-        Room r1 = new Room(1,2,200, 50);
-        Room r2 = new Room(2,2,250, 70);
-        Room r3 = new Room(3,3,150, 35);
-        Room r4 = new Room(4,3,300, 80);
+        Room r1 = new Room(1,2,200, 50, false);
+        Room r2 = new Room(2,2,250, 70, true);
+        Room r3 = new Room(3,3,150, 35, false);
+        Room r4 = new Room(4,3,300, 80, true);
         RoomWall r12 = new RoomWall(24, 0.4f);
         RoomWall r23 = new RoomWall(16, 0.2f);
         RoomWall r34 = new RoomWall(18, 0.5f);

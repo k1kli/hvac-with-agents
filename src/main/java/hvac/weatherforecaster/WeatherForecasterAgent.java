@@ -4,6 +4,7 @@ import hvac.database.Connection;
 import hvac.database.entities.WeatherSnapshot;
 import hvac.ontologies.weather.WeatherOntology;
 import hvac.time.DateTimeSimulator;
+import hvac.util.Logger;
 import hvac.util.df.DfHelpers;
 import hvac.weather.DatabaseForecastProvider;
 import hvac.weather.interfaces.ForecastProvider;
@@ -32,8 +33,10 @@ public class WeatherForecasterAgent extends Agent {
         Connection database = new Connection();
         ForecastProvider provider = new DatabaseForecastProvider(database);
         int weatherGettingSpeed = (int)(1000*3600/DateTimeSimulator.getTimeScale());
+        Logger logger = new Logger();
+        logger.setAgentName("weather-forecaster");
         addBehaviour(new WeatherGettingBehaviour(this, weatherGettingSpeed, provider, oneWeekPlusWeather));
-        addBehaviour(new ForecastProvidingBehaviour(this, oneWeekPlusWeather));
+        addBehaviour(new ForecastProvidingBehaviour(this, oneWeekPlusWeather, logger));
     }
 
     private void usage(String err) {

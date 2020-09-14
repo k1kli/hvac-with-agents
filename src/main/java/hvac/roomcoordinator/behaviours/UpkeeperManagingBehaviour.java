@@ -9,17 +9,14 @@ import jade.content.lang.Codec;
 import jade.content.onto.OntologyException;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
+public class UpkeeperManagingBehaviour extends TickerBehaviour {
     private final RoomContext roomContext;
     private List<Meeting> pendingMeetingsInUpkeeper = new ArrayList<>();
     private List<Meeting> meetingsInUpkeeper = new ArrayList<>();
@@ -31,7 +28,7 @@ public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
         AWAITING_UPKEEPER_RESPONSE
     }
 
-    public RoomCoordinatorTickerBehaviour(Agent a, long period, RoomContext roomContext) {
+    public UpkeeperManagingBehaviour(Agent a, long period, RoomContext roomContext) {
         super(a, period);
         this.roomContext = roomContext;
         upkeeperTemplate = MessageTemplate.MatchSender(roomContext.getMyRoomUpkeeper());
@@ -89,5 +86,9 @@ public class RoomCoordinatorTickerBehaviour extends TickerBehaviour {
             step = Step.CHECKING_MEETING_CHANGES;
             reset(standardPeriod);
         }
+    }
+
+    public MessageTemplate getTemplate() {
+        return upkeeperTemplate;
     }
 }

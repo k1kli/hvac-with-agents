@@ -2,6 +2,7 @@ package hvac.simulation.rooms;
 
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.Set;
 
 public class RoomMap {
     private final Hashtable<Room, LinkedList<RoomLink>> roomGraph
@@ -32,7 +33,7 @@ public class RoomMap {
         return roomGraph.get(r);
     }
 
-    public Iterable<Room> getRooms() {
+    public Set<Room> getRooms() {
         return roomGraph.keySet();
     }
 }

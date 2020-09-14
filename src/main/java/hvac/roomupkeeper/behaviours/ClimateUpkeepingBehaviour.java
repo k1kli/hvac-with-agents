@@ -83,10 +83,37 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
 
     private void initStep() {
         if (context.getNextMeeting() == null) {
-            block(1000);
-            return;
+            if(isCurrentMachineryZeroed()) {
+                block(1000);
+                return;
+            } else {
+                zeroCurrentMachinery();
+            }
         }
         decideNextStep();
+    }
+
+    private boolean isCurrentMachineryZeroed() {
+        return currentMachinery == null || Stream.of(
+                currentMachinery.getAirConditioner().getAirExchangedPerSecond(),
+                currentMachinery.getVentilator().getAirExchangedPerSecond(),
+                currentMachinery.getAirConditioner().getCoolingPower(),
+                currentMachinery.getHeater().getHeatingPower()
+        ).allMatch(parameter -> Helpers.almostEqual(parameter.getCurrentValue(), 0.0f, 0.00001f));
+    }
+
+    private void zeroCurrentMachinery() {
+        MachineParameter zeroParameter = new MachineParameter(0.0f, null);
+        Machinery machinery = new Machinery(
+                new AirConditioner(
+                        zeroParameter,
+                        zeroParameter
+                ),
+                new Heater(zeroParameter),
+                new Ventilator(zeroParameter)
+        );
+        Helpers.updateMachinery(currentMachinery, machinery);
+        enterMachineryUpdateWaitForResponseStep(machinery);
     }
 
 

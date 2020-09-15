@@ -14,6 +14,11 @@ public class CoordinatorContext {
     private final HashMap<String, Meeting> meetingsToAssign = new HashMap<>();
     private final HashMap<String, Meeting> assignedMeetings = new HashMap<>();
     private final Logger logger = new Logger();
+    private final AID simulationAgent;
+
+    public CoordinatorContext(AID simulationAgent){
+        this.simulationAgent = simulationAgent;
+    }
 
     public void addRoom(int seats, AID roomAID){
         if (! rooms.containsKey(seats)){
@@ -44,5 +49,9 @@ public class CoordinatorContext {
 
     public Logger getLogger() {
         return logger;
+    }
+
+    public AID getSimulationAgent() {
+        return simulationAgent;
     }
 }

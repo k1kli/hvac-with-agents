@@ -14,23 +14,25 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class MeetingAssignerBehaviour extends SimpleBehaviour {
     private final Meeting meeting;
+    private final List<Meeting> meetings;
     private final CoordinatorContext context;
     private final MessageTemplate template;
     private final Map<AID, Request> replies = new HashMap<>();
     private int roomsNegotiating;
+    private int currentRoomSizeConsidered;
     private AID candidate = null;
     private boolean done = false;
-    private boolean sendCFPs = true;
-    private final float targetTemperature = 22+273; //TODO: Calculate this from DB of employees
 
-    public MeetingAssignerBehaviour(Agent a, Meeting meeting, CoordinatorContext context) {
+    public MeetingAssignerBehaviour(Agent a, List<Meeting> meetings, CoordinatorContext context) {
         super(a);
-        this.meeting = meeting;
+        this.meetings = meetings;
+        this.meeting = meetings.get(meetings.size() - 1);
         this.context = context;
         template = MessageTemplate.and(
                 MessageTemplate.MatchConversationId(meeting.getId()),
@@ -38,33 +40,35 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
                         MessageTemplate.MatchOntology(MeetingOntology.getInstance().getName()),
                         MessageTemplate.MatchLanguage(FIPANames.ContentLanguage.FIPA_SL0)
                 ));
+        this.currentRoomSizeConsidered = meeting.getEmployees().size();
+        sendCFPs();
     }
 
     @Override
     public void action() {
-        if (sendCFPs) {
-            sendCFPs(meeting.getEmployees().size());
-            sendCFPs = false;
-        }
-        else {
-            ACLMessage msg = myAgent.receive(template);
-            if (msg != null) {
-                handleMessage(msg);
-            } else {
-                block();
-            }
+        ACLMessage msg = myAgent.receive(template);
+        if (msg != null) {
+            handleMessage(msg);
+        } else {
+            block();
         }
     }
 
     @Override
     public boolean done() {
+        if (done){
+            if (meetings.size() > 1) {
+                meetings.remove(meetings.size() - 1);
+                myAgent.addBehaviour(new MeetingAssignerBehaviour(myAgent, meetings, context));
+            }
+        }
         return done;
     }
 
-    public void sendCFPs(int minSeats){
-        Set<AID> possibleRooms = context.getRoomsByNSeats(minSeats);
+    public void sendCFPs(){
+        Set<AID> possibleRooms = context.getRoomsByNSeats(currentRoomSizeConsidered);
         if (null == possibleRooms){
-            context.getLogger().log("No rooms with " + minSeats + " or more seats");
+            context.getLogger().log("No rooms with " + currentRoomSizeConsidered + " or more seats");
             done = true;
             return;
         }
@@ -123,19 +127,28 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
 
     @SuppressWarnings("unused")
     private void handleFailure(ACLMessage msg){
+        if (! msg.getSender().equals(candidate)){
+            context.getLogger().log("Candidate: " + candidate + ", imposer: " + msg.getSender());
+            notUnderstood(msg);
+            return;
+        }
         selectBestCandidate();
     }
 
     private void handleInform(ACLMessage msg) {
         if (! msg.getSender().equals(candidate)){
-            context.getLogger().log("Candidate: " + candidate);
+            context.getLogger().log("Candidate: " + candidate + ", imposer: " + msg.getSender());
             notUnderstood(msg);
             return;
         }
         meeting.setRoomCoordinator(candidate);
-        context.getAssignedMeetings().put(meeting.getId(),meeting);
+        context.getAssignedMeetings().put(meeting.getId(), meeting);
         context.getMeetingsToAssign().remove(meeting.getId());
         context.getLogger().log("Meeting " + meeting.getId() + " successfully reserved by " + candidate.getName());
+        msg.clearAllReceiver();
+        msg.setSender(myAgent.getAID());
+        msg.addReceiver(context.getSimulationAgent());
+        myAgent.send(msg);
         //TODO: Inform Employees that meeting will be held in this room
         done = true;
     }
@@ -161,17 +174,17 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
     }
 
     private void selectBestCandidate(){
-        int currentRoomSize = meeting.getEmployees().size();
         if (null != candidate){
-            currentRoomSize = replies.get(candidate).getMeeting().getPeopleInRoom();
             replies.remove(candidate);
             roomsNegotiating--;
+            candidate = null;
         }
         if (replies.isEmpty()){
-            context.getLogger().log("All rooms with " + currentRoomSize + " seats are busy");
-            sendCFPs(currentRoomSize + 1);
+            context.getLogger().log("All rooms with " + currentRoomSizeConsidered++ + " seats are busy");
+            sendCFPs();
             return;
         }
+        float targetTemperature = 22+273; //TODO: Calculate this from DB of employees
         float minDiff = Float.MAX_VALUE;
         for (AID freeRooms: replies.keySet()){
             float forecastedDiff = Math.abs(replies.get(freeRooms).getMeeting().getTemperature() - targetTemperature);

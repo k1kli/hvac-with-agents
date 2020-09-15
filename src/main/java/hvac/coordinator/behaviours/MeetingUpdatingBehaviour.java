@@ -56,9 +56,10 @@ public class MeetingUpdatingBehaviour extends TickerBehaviour {
             for(Employee emp : meeting.getEmployees())
                 System.out.println("    -"+emp.getAlias());
         }
-        for(Meeting meeting: meetingsToAdd) {
-            myAgent.addBehaviour(new MeetingAssignerBehaviour(myAgent, meeting, context));
+        if (!meetingsToAdd.isEmpty()){
+            myAgent.addBehaviour(new MeetingAssignerBehaviour(myAgent, meetingsToAdd, context));
         }
+
     }
 
     public List<Event> getCalendarEvents() throws CalendarException

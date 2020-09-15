@@ -10,6 +10,7 @@ import javax.persistence.*;
 public class Employee {
     private int id;
     private String alias;
+    private float prefTemperature;
 
     public Employee(){}//for hibernate
 
@@ -35,5 +36,14 @@ public class Employee {
 
     public void setAlias(String alias) {
         this.alias = alias;
+    }
+
+    @Column(name = "TEMPERATURE")
+    public float getPrefTemperature() {
+        return prefTemperature;
+    }
+
+    public void setPrefTemperature(float prefTemperature) {
+        this.prefTemperature = prefTemperature;
     }
 }

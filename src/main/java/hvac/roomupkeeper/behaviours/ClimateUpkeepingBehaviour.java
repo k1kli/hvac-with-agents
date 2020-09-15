@@ -83,10 +83,37 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
 
     private void initStep() {
         if (context.getNextMeeting() == null) {
-            block(1000);
-            return;
+            if(isCurrentMachineryZeroed()) {
+                block(1000);
+                return;
+            } else {
+                zeroCurrentMachinery();
+            }
         }
         decideNextStep();
+    }
+
+    private boolean isCurrentMachineryZeroed() {
+        return currentMachinery == null || Stream.of(
+                currentMachinery.getAirConditioner().getAirExchangedPerSecond(),
+                currentMachinery.getVentilator().getAirExchangedPerSecond(),
+                currentMachinery.getAirConditioner().getCoolingPower(),
+                currentMachinery.getHeater().getHeatingPower()
+        ).allMatch(parameter -> Helpers.almostEqual(parameter.getCurrentValue(), 0.0f, 0.00001f));
+    }
+
+    private void zeroCurrentMachinery() {
+        MachineParameter zeroParameter = new MachineParameter(0.0f, null);
+        Machinery machinery = new Machinery(
+                new AirConditioner(
+                        zeroParameter,
+                        zeroParameter
+                ),
+                new Heater(zeroParameter),
+                new Ventilator(zeroParameter)
+        );
+        Helpers.updateMachinery(currentMachinery, machinery);
+        enterMachineryUpdateWaitForResponseStep(machinery);
     }
 
 
@@ -281,7 +308,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     private float calculateTemperatureMaintainingHeatingPower(float requiredTemperatureSlope) {
         //not include older statuses that have the same slope as the newer ones
         //as these slopes will be used as interpolation knots arguments and have to be distinct
-        Stream<RoomStatus> statusesWithUniqueTempSlopes = roomStatuses.stream()
+        /*Stream<RoomStatus> statusesWithUniqueTempSlopes = roomStatuses.stream()
                 .filter(status ->
                         roomStatuses
                                 .stream()
@@ -300,7 +327,9 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                     values.add(status.getHeatingPower());
                 });
         float unboundRequiredHeatingPower = Interpolation.calculateValueAt(requiredTemperatureSlope,
-                arguments, values);
+                arguments, values);*/
+        //TODO: check why above is counterproductive, and remove below line which is dumb, but working
+        float unboundRequiredHeatingPower = 10 * requiredTemperatureSlope * currentMachinery.getHeater().getHeatingPower().getMaxValue();
         return Math.max(Math.min(unboundRequiredHeatingPower,
                 currentMachinery.getHeater().getHeatingPower().getMaxValue()),
                 -currentMachinery.getAirConditioner().getCoolingPower().getMaxValue());
@@ -421,7 +450,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     }
 
     private void enterMachineryInfoWaitForResponseStep() {
-        context.getLogger().log("entering MachineryInfoWaitForResponseStep");
+        //context.getLogger().log("entering MachineryInfoWaitForResponseStep");
         try {
             ACLMessage msg = SimulationAgentMessenger.prepareReportMachineryStatus(
                     context.getMyRoomId(), myAgent, context.getSimulationAgent());
@@ -434,7 +463,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     }
 
     private void enterWeatherForecasterWaitForResponseStep() {
-        context.getLogger().log("entering WeatherForecasterWaitForResponseStep");
+        //context.getLogger().log("entering WeatherForecasterWaitForResponseStep");
         try {
             ACLMessage msg = WeatherForecasterMessenger.prepareForecastRequest(
                     DateTimeSimulator.getCurrentDate(),

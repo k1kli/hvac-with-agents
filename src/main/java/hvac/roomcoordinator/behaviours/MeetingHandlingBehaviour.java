@@ -111,6 +111,7 @@ public class MeetingHandlingBehaviour extends CyclicBehaviour {
         reply.setConversationId(request.getMeeting().getMeetingID());
         reply.clearAllReceiver();
         reply.addReceiver(roomContext.getCoordinator());
+        request.getMeeting().setRoomID(roomContext.getMyRoomId());
         request.setStatus(RequestStatus.OFFER);
         fillAndSend(reply, request);
     }

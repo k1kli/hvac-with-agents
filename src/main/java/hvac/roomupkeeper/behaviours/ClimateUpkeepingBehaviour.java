@@ -308,7 +308,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     private float calculateTemperatureMaintainingHeatingPower(float requiredTemperatureSlope) {
         //not include older statuses that have the same slope as the newer ones
         //as these slopes will be used as interpolation knots arguments and have to be distinct
-        Stream<RoomStatus> statusesWithUniqueTempSlopes = roomStatuses.stream()
+        /*Stream<RoomStatus> statusesWithUniqueTempSlopes = roomStatuses.stream()
                 .filter(status ->
                         roomStatuses
                                 .stream()
@@ -327,7 +327,9 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
                     values.add(status.getHeatingPower());
                 });
         float unboundRequiredHeatingPower = Interpolation.calculateValueAt(requiredTemperatureSlope,
-                arguments, values);
+                arguments, values);*/
+        //TODO: check why above is counterproductive, and remove below line which is dumb, but working
+        float unboundRequiredHeatingPower = 10 * requiredTemperatureSlope * currentMachinery.getHeater().getHeatingPower().getMaxValue();
         return Math.max(Math.min(unboundRequiredHeatingPower,
                 currentMachinery.getHeater().getHeatingPower().getMaxValue()),
                 -currentMachinery.getAirConditioner().getCoolingPower().getMaxValue());
@@ -448,7 +450,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     }
 
     private void enterMachineryInfoWaitForResponseStep() {
-        context.getLogger().log("entering MachineryInfoWaitForResponseStep");
+        //context.getLogger().log("entering MachineryInfoWaitForResponseStep");
         try {
             ACLMessage msg = SimulationAgentMessenger.prepareReportMachineryStatus(
                     context.getMyRoomId(), myAgent, context.getSimulationAgent());
@@ -461,7 +463,7 @@ public class ClimateUpkeepingBehaviour extends CyclicBehaviour {
     }
 
     private void enterWeatherForecasterWaitForResponseStep() {
-        context.getLogger().log("entering WeatherForecasterWaitForResponseStep");
+        //context.getLogger().log("entering WeatherForecasterWaitForResponseStep");
         try {
             ACLMessage msg = WeatherForecasterMessenger.prepareForecastRequest(
                     DateTimeSimulator.getCurrentDate(),

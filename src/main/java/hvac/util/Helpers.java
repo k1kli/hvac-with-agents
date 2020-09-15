@@ -18,22 +18,48 @@ import java.util.function.Consumer;
 
 public class Helpers {
     public static void loadMap(RoomMap roomMap){
-        Room r1 = new Room(1,2,200, 50, false);
+        Room r1 = new Room(1,2,200, 50, true);
         Room r2 = new Room(2,2,250, 70, true);
-        Room r3 = new Room(3,3,150, 35, false);
+        Room r3 = new Room(3,3,150, 35, true);
         Room r4 = new Room(4,3,300, 80, true);
+        Room r5 = new Room(5,1,100, 25, true);
+        Room r6 = new Room(6,2,200, 50, true);
+        Room r7 = new Room(7,3,300, 80, true);
+        Room r8 = new Room(8,4,500, 100, true);
         RoomWall r12 = new RoomWall(24, 0.4f);
         RoomWall r23 = new RoomWall(16, 0.2f);
         RoomWall r34 = new RoomWall(18, 0.5f);
         RoomWall r41 = new RoomWall(40, 0.1f);
+        RoomWall r45 = new RoomWall(22, 0.1f);
+        RoomWall r46 = new RoomWall(34, 0.2f);
+        RoomWall r56 = new RoomWall(24, 0.2f);
+        RoomWall r26 = new RoomWall(26, 0.3f);
+        RoomWall r17 = new RoomWall(30, 0.4f);
+        RoomWall r47 = new RoomWall(11, 0.1f);
+        RoomWall r38 = new RoomWall(12, 0.3f);
+        RoomWall r58 = new RoomWall(15, 0.2f);
+        RoomWall r78 = new RoomWall(22, 0.1f);
         roomMap.addRoom(r1);
         roomMap.addRoom(r2);
         roomMap.addRoom(r3);
         roomMap.addRoom(r4);
+        roomMap.addRoom(r5);
+        roomMap.addRoom(r6);
+        roomMap.addRoom(r7);
+        roomMap.addRoom(r8);
         roomMap.linkRooms(r1, r2, r12);
         roomMap.linkRooms(r2, r3, r23);
         roomMap.linkRooms(r3, r4, r34);
         roomMap.linkRooms(r4, r1, r41);
+        roomMap.linkRooms(r4, r5, r45);
+        roomMap.linkRooms(r4, r6, r46);
+        roomMap.linkRooms(r5, r6, r56);
+        roomMap.linkRooms(r2, r6, r26);
+        roomMap.linkRooms(r1, r7, r17);
+        roomMap.linkRooms(r4, r7, r47);
+        roomMap.linkRooms(r3, r8, r38);
+        roomMap.linkRooms(r5, r8, r58);
+        roomMap.linkRooms(r7, r8, r78);
     }
 
     public static boolean isBetween(LocalDateTime date, LocalDateTime start, LocalDateTime end) {
@@ -61,10 +87,11 @@ public class Helpers {
         DateTimeSimulator.init(startTime, timeScale);
         return true;
     }
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+
     public static boolean almostEqual(float f1, float f2, float epsilon) {
         return Math.abs(f1-f2)<epsilon;
     }
+
     public static void updateMachinery(Machinery updatedMachinery, Machinery updatingMachinery) {
         Optional.ofNullable(updatingMachinery.getAirConditioner()).ifPresent(airConditioner -> {
             Optional.ofNullable(airConditioner.getCoolingPower())

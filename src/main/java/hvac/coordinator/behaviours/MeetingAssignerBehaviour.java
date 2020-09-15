@@ -14,11 +14,13 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class MeetingAssignerBehaviour extends SimpleBehaviour {
     private final Meeting meeting;
+    private final List<Meeting> meetings;
     private final CoordinatorContext context;
     private final MessageTemplate template;
     private final Map<AID, Request> replies = new HashMap<>();
@@ -27,9 +29,10 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
     private AID candidate = null;
     private boolean done = false;
 
-    public MeetingAssignerBehaviour(Agent a, Meeting meeting, CoordinatorContext context) {
+    public MeetingAssignerBehaviour(Agent a, List<Meeting> meetings, CoordinatorContext context) {
         super(a);
-        this.meeting = meeting;
+        this.meetings = meetings;
+        this.meeting = meetings.get(meetings.size() - 1);
         this.context = context;
         template = MessageTemplate.and(
                 MessageTemplate.MatchConversationId(meeting.getId()),
@@ -53,6 +56,12 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
 
     @Override
     public boolean done() {
+        if (done){
+            if (meetings.size() > 1) {
+                meetings.remove(meetings.size() - 1);
+                myAgent.addBehaviour(new MeetingAssignerBehaviour(myAgent, meetings, context));
+            }
+        }
         return done;
     }
 

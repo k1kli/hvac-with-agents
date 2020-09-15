@@ -23,9 +23,9 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
     private final MessageTemplate template;
     private final Map<AID, Request> replies = new HashMap<>();
     private int roomsNegotiating;
+    private int currentRoomSizeConsidered;
     private AID candidate = null;
     private boolean done = false;
-    private boolean sendCFPs = true;
 
     public MeetingAssignerBehaviour(Agent a, Meeting meeting, CoordinatorContext context) {
         super(a);
@@ -37,21 +37,17 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
                         MessageTemplate.MatchOntology(MeetingOntology.getInstance().getName()),
                         MessageTemplate.MatchLanguage(FIPANames.ContentLanguage.FIPA_SL0)
                 ));
+        this.currentRoomSizeConsidered = meeting.getEmployees().size();
+        sendCFPs();
     }
 
     @Override
     public void action() {
-        if (sendCFPs) {
-            sendCFPs(meeting.getEmployees().size());
-            sendCFPs = false;
-        }
-        else {
-            ACLMessage msg = myAgent.receive(template);
-            if (msg != null) {
-                handleMessage(msg);
-            } else {
-                block();
-            }
+        ACLMessage msg = myAgent.receive(template);
+        if (msg != null) {
+            handleMessage(msg);
+        } else {
+            block();
         }
     }
 
@@ -60,10 +56,10 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
         return done;
     }
 
-    public void sendCFPs(int minSeats){
-        Set<AID> possibleRooms = context.getRoomsByNSeats(minSeats);
+    public void sendCFPs(){
+        Set<AID> possibleRooms = context.getRoomsByNSeats(currentRoomSizeConsidered);
         if (null == possibleRooms){
-            context.getLogger().log("No rooms with " + minSeats + " or more seats");
+            context.getLogger().log("No rooms with " + currentRoomSizeConsidered + " or more seats");
             done = true;
             return;
         }
@@ -169,15 +165,14 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
     }
 
     private void selectBestCandidate(){
-        int currentRoomSize = meeting.getEmployees().size();
         if (null != candidate){
-            currentRoomSize = replies.get(candidate).getMeeting().getPeopleInRoom();
             replies.remove(candidate);
             roomsNegotiating--;
+            candidate = null;
         }
         if (replies.isEmpty()){
-            context.getLogger().log("All rooms with " + currentRoomSize + " seats are busy");
-            sendCFPs(currentRoomSize + 1);
+            context.getLogger().log("All rooms with " + currentRoomSizeConsidered++ + " seats are busy");
+            sendCFPs();
             return;
         }
         float targetTemperature = 22+273; //TODO: Calculate this from DB of employees

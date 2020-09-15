@@ -8,10 +8,7 @@ import hvac.ontologies.machinery.MachineryOntology;
 import hvac.ontologies.meeting.MeetingOntology;
 import hvac.ontologies.roomclimate.RoomClimateOntology;
 import hvac.roomupkeeper.RoomUpkeeperAgent;
-import hvac.simulation.behaviours.AgentlessModeHandlingBehaviour;
-import hvac.simulation.behaviours.ClimateInformingBehaviour;
-import hvac.simulation.behaviours.ClimateUpdatingBehaviour;
-import hvac.simulation.behaviours.MachineryInterfaceBehaviour;
+import hvac.simulation.behaviours.*;
 import hvac.simulation.machinery.AirConditioner;
 import hvac.simulation.machinery.Heater;
 import hvac.simulation.machinery.MachineParameter;
@@ -65,7 +62,10 @@ public class SimulationAgent extends Agent {
                 new DatabaseForecastProvider(simulationContext.getConnection())));
         addBehaviour(new ClimateInformingBehaviour(this, simulationContext));
         addBehaviour(new MachineryInterfaceBehaviour(this, simulationContext));
+        addBehaviour(new PerformanceCheckingBehaviour(this, simulationContext));
+        addBehaviour(new PerformanceReporterBehaviour(this, simulationContext));
         if(agentless) addBehaviour(new AgentlessModeHandlingBehaviour(this, simulationContext));
+        else addBehaviour(new AgentfullModeHandlingBehaviour(this, simulationContext));
     }
 
     private boolean tryInitCalendar() {
@@ -99,7 +99,7 @@ public class SimulationAgent extends Agent {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        simulationContext.getLogger().log("Room upkeeper and Coordinator agents started.");
+        simulationContext.getLogger().log("Weather and Room Upkeepers agents started.");
     }
 
     void initAgentfullAgents() {
@@ -107,7 +107,7 @@ public class SimulationAgent extends Agent {
         try {
             myContainer.createNewAgent("coordinator",
                     CoordinatorAgent.class.getCanonicalName(),
-                    new Object[]{getArguments()[0], getArguments()[1]}).start();
+                    new Object[]{getArguments()[0], getArguments()[1], getAID()}).start();
 
             myContainer.createNewAgent("weather-forecaster",
                     WeatherForecasterAgent.class.getCanonicalName(),
@@ -132,12 +132,12 @@ public class SimulationAgent extends Agent {
         int i = 0;
         for(Room r : simulationContext.getRoomMap().getRooms()) {
             RoomClimate climate = new RoomClimate(
-                    new Heater(new MachineParameter(0f, 10000.0f)),
+                    new Heater(new MachineParameter(0f, 10000.0f, 10f)),
                     new AirConditioner(
-                            new MachineParameter(0f, 10000.0f),
-                            new MachineParameter(0f, 0.5f),
+                            new MachineParameter(0f, 10000.0f, 10f),
+                            new MachineParameter(0f, 0.5f, 1f),
                             0.5f),
-                    new Ventilator(new MachineParameter(0.02f, 0.5f))//20L/s == 0.02m^3/s
+                    new Ventilator(new MachineParameter(0.02f, 0.5f, 0.25f))//20L/s == 0.02m^3/s
             );
             climate.setAbsoluteHumidity(0.001f);
             climate.setPeopleInRoom(0);

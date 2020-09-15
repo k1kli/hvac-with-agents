@@ -26,11 +26,12 @@ import static hvac.util.Helpers.loadMap;
 public class CoordinatorAgent extends Agent {
     Connection database;
     Calendar calendar;
-    CoordinatorContext context = new CoordinatorContext();
+    CoordinatorContext context;
     @Override
     protected void setup() {
         getContentManager().registerLanguage(new SLCodec(), FIPANames.ContentLanguage.FIPA_SL0);
         getContentManager().registerOntology(MeetingOntology.getInstance());
+        context = new CoordinatorContext((AID) getArguments()[2]);
         context.getLogger().setAgentName("coordinator");
         if(!initTimeFromArgs(this, this::usage)) return;
         if(!DfHelpers.tryRegisterInDfWithServiceName(this, "coordinator")) return;
@@ -96,9 +97,10 @@ public class CoordinatorAgent extends Agent {
 
     private void usage(String err) {
         System.err.println("-------- Coordinator agent usage --------------");
-        System.err.println("simulation:hvac.coordinator.CoordinatorAgent(timeScale, start_date)");
+        System.err.println("simulation:hvac.coordinator.CoordinatorAgent(timeScale, start_date, simulator_AID)");
         System.err.println("timescale - floating point value indicating speed of passing time");
         System.err.println("Date from which to start simulating \"yyyy-MM-dd HH:mm:ss\"");
+        System.err.println("AID of agent simulator");
         System.err.println("err:" + err);
     }
 }

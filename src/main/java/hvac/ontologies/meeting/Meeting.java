@@ -8,13 +8,13 @@ import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Objects;
 
-@SuppressWarnings("unused")
 public class Meeting implements Concept, Comparable<Meeting> {
     private String meetingID;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private int peopleInRoom;
     private float temperature;
+    private int roomID = 0;
 
     public Meeting(){}
 
@@ -33,7 +33,6 @@ public class Meeting implements Concept, Comparable<Meeting> {
         this.endDate = meeting.getEndDate();
         this.peopleInRoom = meeting.getEmployees().size();
         this.temperature = 0;
-
     }
 
     public String getMeetingID() {
@@ -99,7 +98,6 @@ public class Meeting implements Concept, Comparable<Meeting> {
         this.temperature = Temperature;
     }
 
-    //TODO change to static?
     public long millisecondsOverlapping(Meeting meeting){
         long timeDifference = Duration.between(getLocalStartDate().isAfter(meeting.getLocalStartDate()) ?
                         getLocalStartDate() : meeting.getLocalStartDate(),
@@ -107,7 +105,7 @@ public class Meeting implements Concept, Comparable<Meeting> {
                         getLocalEndDate() : meeting.getLocalEndDate()).toMillis();
         return timeDifference > 0 ? timeDifference : 0;
     }
-    //TODO change to static?
+
     public boolean isOverlapping(Meeting meeting){
         return millisecondsOverlapping(meeting) > 0;
     }
@@ -143,5 +141,13 @@ public class Meeting implements Concept, Comparable<Meeting> {
     @Override
     public int hashCode() {
         return Objects.hash(meetingID, startDate, endDate, peopleInRoom, temperature);
+    }
+
+    public int getRoomID() {
+        return roomID;
+    }
+
+    public void setRoomID(int roomID) {
+        this.roomID = roomID;
     }
 }

@@ -17,6 +17,7 @@ public class MeetingOntology extends Ontology {
     public static final String MEETING_END_DATE = "endDate";
     public static final String MEETING_PEOPLE = "peopleInRoom";
     public static final String MEETING_TEMPERATURE = "temperature";
+    public static final String MEETING_ROOM_ID = "roomID";
 
     public static final String REQUEST = "Request";
     public static final String REQUEST_MEETING = "Meeting";
@@ -39,6 +40,7 @@ public class MeetingOntology extends Ontology {
             cs.add(MEETING_END_DATE, (PrimitiveSchema) getSchema(BasicOntology.DATE));
             cs.add(MEETING_PEOPLE, (PrimitiveSchema) getSchema(BasicOntology.INTEGER));
             cs.add(MEETING_TEMPERATURE, (PrimitiveSchema) getSchema(BasicOntology.FLOAT));
+            cs.add(MEETING_ROOM_ID, (PrimitiveSchema) getSchema(BasicOntology.INTEGER));
 
             AgentActionSchema as = new AgentActionSchema(REQUEST);
             add(as, Request.class);

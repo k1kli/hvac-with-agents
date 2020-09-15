@@ -63,7 +63,7 @@ public class RoomCoordinatorAgent extends Agent {
         }
         RoomContext newRoomContext = new RoomContext(myRoomId,
                 (AID) getArguments()[3],
-                (boolean)getArguments()[6],
+                (boolean) getArguments()[6],
                 seats);
         newRoomContext.getLogger().setAgentName("room coordinator (" + newRoomContext.getMyRoomId() + ")");
         try {

@@ -3,6 +3,7 @@ package hvac.simulation.behaviours;
 import hvac.ontologies.machinery.*;
 import hvac.simulation.SimulationContext;
 import hvac.simulation.rooms.RoomClimate;
+import hvac.time.DateTimeSimulator;
 import hvac.util.Conversions;
 import hvac.util.behaviours.RequestProcessingBehaviour;
 import jade.content.Concept;
@@ -15,6 +16,8 @@ import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -103,9 +106,18 @@ public class MachineryInterfaceBehaviour extends RequestProcessingBehaviour {
         boolean allValid = parameterUpdates.stream().allMatch(parameterUpdate ->
                 parameterUpdate.newValue >= 0 && parameterUpdate.newValue <= parameterUpdate.parameterToUpdate.getMaxValue());
         if (allValid) {
-            parameterUpdates.forEach(
-                    parameterUpdate -> parameterUpdate.parameterToUpdate.setCurrentValue(parameterUpdate.newValue)
-            );
+            for (ParameterUpdate parameterUpdate: parameterUpdates) {
+                LocalDateTime prevChangeTime = parameterUpdate.parameterToUpdate.getLastChanged();
+                LocalDateTime currChangeTime = DateTimeSimulator.getCurrentDate();
+                if (prevChangeTime != null){
+                    float energyConsumed = ((float) Duration.between(prevChangeTime, currChangeTime).toMillis() / 1000) *
+                            (parameterUpdate.parameterToUpdate.getCurrentValue() / parameterUpdate.parameterToUpdate.getMaxValue()) *
+                            parameterUpdate.parameterToUpdate.getPowerConsumption();
+                    context.addEnergyUsage(energyConsumed);
+                }
+                parameterUpdate.parameterToUpdate.setCurrentValue(parameterUpdate.newValue);
+                parameterUpdate.parameterToUpdate.setLastChanged(currChangeTime);
+            }
             replyAgree(myAgent, msg);
         }
         else

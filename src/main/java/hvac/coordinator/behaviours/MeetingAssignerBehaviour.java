@@ -26,7 +26,6 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
     private AID candidate = null;
     private boolean done = false;
     private boolean sendCFPs = true;
-    private final float targetTemperature = 22+273; //TODO: Calculate this from DB of employees
 
     public MeetingAssignerBehaviour(Agent a, Meeting meeting, CoordinatorContext context) {
         super(a);
@@ -123,19 +122,28 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
 
     @SuppressWarnings("unused")
     private void handleFailure(ACLMessage msg){
+        if (! msg.getSender().equals(candidate)){
+            context.getLogger().log("Candidate: " + candidate + ", imposer: " + msg.getSender());
+            notUnderstood(msg);
+            return;
+        }
         selectBestCandidate();
     }
 
     private void handleInform(ACLMessage msg) {
         if (! msg.getSender().equals(candidate)){
-            context.getLogger().log("Candidate: " + candidate);
+            context.getLogger().log("Candidate: " + candidate + ", imposer: " + msg.getSender());
             notUnderstood(msg);
             return;
         }
         meeting.setRoomCoordinator(candidate);
-        context.getAssignedMeetings().put(meeting.getId(),meeting);
+        context.getAssignedMeetings().put(meeting.getId(), meeting);
         context.getMeetingsToAssign().remove(meeting.getId());
         context.getLogger().log("Meeting " + meeting.getId() + " successfully reserved by " + candidate.getName());
+        msg.clearAllReceiver();
+        msg.setSender(myAgent.getAID());
+        msg.addReceiver(context.getSimulationAgent());
+        myAgent.send(msg);
         //TODO: Inform Employees that meeting will be held in this room
         done = true;
     }
@@ -172,6 +180,7 @@ public class MeetingAssignerBehaviour extends SimpleBehaviour {
             sendCFPs(currentRoomSize + 1);
             return;
         }
+        float targetTemperature = 22+273; //TODO: Calculate this from DB of employees
         float minDiff = Float.MAX_VALUE;
         for (AID freeRooms: replies.keySet()){
             float forecastedDiff = Math.abs(replies.get(freeRooms).getMeeting().getTemperature() - targetTemperature);

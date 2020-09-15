@@ -5,8 +5,8 @@ import com.google.api.services.calendar.model.Event;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.api.services.calendar.model.Events;
 import hvac.calendar.CalendarException;
-import hvac.coordinator.Meeting;
 import hvac.database.entities.Employee;
+import hvac.ontologies.meeting.Meeting;
 import hvac.roomupkeeper.RoomUpkeeperAgentMessenger;
 import hvac.simulation.SimulationContext;
 import hvac.simulation.rooms.Room;
@@ -32,7 +32,6 @@ public class AgentlessModeHandlingBehaviour extends TickerBehaviour {
     private final SimulationContext context;
     private static final int MINUTES_BETWEEN_UPDATES = 5;
     private final Map<Integer, Meeting> currentMeetings = new HashMap<>();
-    private static final float targetTemperature = 22 + 273; //TODO: Calculate this from DB of employees
 
     public AgentlessModeHandlingBehaviour(Agent agent, SimulationContext context) {
         super(agent, (long) (MINUTES_BETWEEN_UPDATES * 60 * 1000 / DateTimeSimulator.getTimeScale()));
@@ -73,24 +72,23 @@ public class AgentlessModeHandlingBehaviour extends TickerBehaviour {
         }
         List<Meeting> calendarMeetings = constructFromCalendar(calendarEvents)
                 .stream()
-                .filter(meeting -> meeting.getStartDate().isBefore(DateTimeSimulator.getCurrentDate().plusMinutes(MINUTES_BETWEEN_UPDATES)))
+                .filter(meeting -> meeting.getLocalStartDate().isBefore(DateTimeSimulator.getCurrentDate().plusMinutes(MINUTES_BETWEEN_UPDATES)))
                 .filter(meeting -> context.getCalendarMeetings()
                         .stream()
-                        .noneMatch(meeting1 -> meeting1.getId().equals(meeting.getId())))
+                        .noneMatch(meeting1 -> meeting1.getMeetingID().equals(meeting.getMeetingID())))
                 .collect(Collectors.toList());
         updateCurrentMeetings();
         for (Meeting meeting : calendarMeetings) {
-            List<Room> validRooms = getRoomsByNSeats(meeting.getEmployees().size());
+            List<Room> validRooms = getRoomsByNSeats(meeting.getPeopleInRoom());
             Optional<Room> firstValidRoom = validRooms.stream().findFirst();
             if (firstValidRoom.isPresent()) {
-                context.getLogger().log("setting up meeting with id " + meeting.getId() + " " +
+                context.getLogger().log("setting up meeting with id " + meeting.getMeetingID() + " " +
                         "in room with id " + firstValidRoom.get().getId());
                 try {
-
-                    hvac.ontologies.meeting.Meeting ontoMeeting = new hvac.ontologies.meeting.Meeting(meeting);
-                    ontoMeeting.setTemperature(targetTemperature);
+                    float targetTemperature = 22 + 273; //TODO: Calculate this from DB of employees
+                    meeting.setTemperature(targetTemperature);
                     ACLMessage msg = RoomUpkeeperAgentMessenger.prepareMantainConditions(
-                            Collections.singletonList(ontoMeeting),
+                            Collections.singletonList(meeting),
                             myAgent,
                             context.getUpkeepers().get(firstValidRoom.get().getId()));
                     myAgent.send(msg);
@@ -98,8 +96,11 @@ public class AgentlessModeHandlingBehaviour extends TickerBehaviour {
                     e.printStackTrace();
                     continue;
                 }
+                meeting.setRoomID(firstValidRoom.get().getId());
                 currentMeetings.put(firstValidRoom.get().getId(), meeting);
                 context.getCalendarMeetings().add(meeting);
+            } else {
+                context.getLogger().log("No rooms with " + meeting.getPeopleInRoom() + " or more seats");
             }
         }
     }
@@ -114,7 +115,7 @@ public class AgentlessModeHandlingBehaviour extends TickerBehaviour {
 
     private void updateCurrentMeetings() {
         currentMeetings.keySet()
-                .removeIf(roomId -> currentMeetings.get(roomId).getEndDate().isBefore(DateTimeSimulator.getCurrentDate()));
+                .removeIf(roomId -> currentMeetings.get(roomId).getLocalEndDate().isBefore(DateTimeSimulator.getCurrentDate()));
     }
 
     public List<Event> getCalendarEvents() throws CalendarException {
@@ -152,11 +153,11 @@ public class AgentlessModeHandlingBehaviour extends TickerBehaviour {
                 .split("\n"))
                 .map(Employee::new)
                 .collect(Collectors.toSet());
-        return new Meeting(
+        return new Meeting(new hvac.coordinator.Meeting(
                 event.getId(),
                 convertToLocal.apply(event.getStart()),
                 convertToLocal.apply(event.getEnd()),
                 null,
-                employeeSet);
+                employeeSet));
     }
 }
